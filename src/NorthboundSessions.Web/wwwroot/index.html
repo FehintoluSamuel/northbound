@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Northbound Sessions — Daily market education</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1F2A44; --emerald:#16A34A; --fog:#F3F4F6; --ink:#111827;
+    --slate:#6B7280; --line:#E1E3E8; --paper:#FDFDFC;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Inter', sans-serif; color:var(--ink); background:var(--paper); line-height:1.65; }
+  h1,h2,h3{ font-family:'Source Serif 4', serif; color:var(--navy); letter-spacing:-0.01em; }
+  a{ color:inherit; text-decoration:none; }
+  img{ display:block; max-width:100%; }
+  .wrap{ max-width:1140px; margin:0 auto; padding:0 32px; }
+  .eyebrow{ font-size:12.5px; letter-spacing:0.09em; text-transform:uppercase; color:var(--emerald); font-weight:600; }
+
+  nav{ border-bottom:1px solid var(--line); padding:20px 0; position:relative; z-index:10; background:var(--paper); }
+  nav .wrap{ display:flex; align-items:center; justify-content:space-between; }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{ width:32px; height:32px; }
+  .brand-name{ font-family:'Source Serif 4', serif; font-size:18px; font-weight:600; color:var(--navy); }
+  .nav-links{ display:flex; gap:34px; font-size:14px; color:var(--slate); }
+  .nav-links a:hover{ color:var(--navy); }
+  .nav-right{ display:flex; align-items:center; gap:20px; }
+  .link-signin{ font-size:14px; font-weight:500; color:var(--navy); }
+  .btn-primary{ background:var(--navy); color:#fff; padding:11px 24px; border-radius:2px; font-size:14px; font-weight:500; display:inline-block; }
+  .btn-primary:hover{ background:#152038; }
+
+  /* Hero */
+  .hero{ padding:80px 0 140px; position:relative; }
+  .hero .wrap{ display:grid; grid-template-columns:1.05fr 0.95fr; gap:64px; align-items:center; }
+  .hero h1{ font-size:52px; line-height:1.1; font-weight:700; margin:18px 0 22px; }
+  .hero h1 .accent{ color:var(--emerald); font-style:italic; font-weight:600; }
+  .hero p.lede{ font-size:17.5px; color:var(--slate); max-width:470px; margin-bottom:34px; }
+  .hero-actions{ display:flex; gap:16px; align-items:center; }
+  .btn-secondary-link{ font-size:14.5px; font-weight:500; color:var(--navy); border-bottom:1px solid var(--navy); padding-bottom:2px; }
+
+  .hero-visual{ position:relative; }
+  /* Real image container: fixed aspect ratio, cropped with object-fit so any
+     photo you drop in looks intentional instead of stretched/distorted */
+  .hero-image-slot{
+    aspect-ratio:4/5; background:var(--fog); border:1px solid var(--line); border-radius:4px;
+    overflow:hidden;
+  }
+  .hero-image-slot img{
+    width:100%; height:100%; object-fit:cover; object-position:center;
+  }
+
+  .float-card{
+    position:absolute; background:#fff; border:1px solid var(--line); border-radius:6px;
+    padding:14px 18px; display:flex; align-items:center; gap:12px;
+    box-shadow:0 12px 28px -8px rgba(31,42,68,0.18);
+  }
+  .float-icon{ width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .float-1{ top:-18px; left:-36px; }
+  .float-1 .float-icon{ background:#E9F5EE; color:var(--emerald); }
+  .float-2{ bottom:56px; right:-40px; }
+  .float-2 .float-icon{ background:#EAEEF6; color:var(--navy); }
+  .float-3{ bottom:-20px; left:20px; }
+  .float-3 .float-icon{ background:#FDF3E7; color:#B45309; }
+  .float-title{ font-size:13.5px; font-weight:600; color:var(--ink); }
+  .float-sub{ font-size:12px; color:var(--slate); }
+
+  .stats{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:36px 0; }
+  .stats .wrap{ display:grid; grid-template-columns:repeat(3,1fr); text-align:center; }
+  .stats .stat + .stat{ border-left:1px solid var(--line); }
+  .stat-num{ font-family:'Source Serif 4', serif; font-size:30px; color:var(--navy); font-weight:600; }
+  .stat-label{ font-size:12.5px; color:var(--slate); margin-top:6px; }
+
+  .section{ padding:96px 0; }
+  .section-head{ max-width:580px; margin:0 auto 56px; text-align:center; }
+  .section-head .eyebrow{ display:block; margin-bottom:14px; }
+  .section h2{ font-size:34px; font-weight:600; margin-bottom:14px; }
+  .section-head p{ color:var(--slate); font-size:15.5px; }
+
+  .steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:0; position:relative; }
+  .step{ padding:0 24px; position:relative; }
+  .step:not(:first-child)::before{ content:""; position:absolute; left:0; top:20px; width:24px; height:1px; background:var(--line); }
+  .step-num{ font-family:'Source Serif 4', serif; font-size:22px; color:var(--emerald); font-weight:600; margin-bottom:14px; display:block; }
+  .step h3{ font-size:16px; margin-bottom:8px; }
+  .step p{ font-size:13.5px; color:var(--slate); }
+
+  .features{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .feature{ background:var(--paper); padding:34px 26px; }
+  .feature-icon{ width:38px; height:38px; border-radius:50%; background:var(--fog); display:flex; align-items:center; justify-content:center; margin-bottom:20px; font-size:16px; color:var(--navy); }
+  .feature h3{ font-size:16.5px; margin-bottom:8px; }
+  .feature p{ font-size:13.5px; color:var(--slate); }
+
+  /* About instructor */
+  .about{ background:var(--fog); }
+  .about .wrap{ display:grid; grid-template-columns:0.8fr 1.2fr; gap:56px; align-items:center; }
+  .about-photo{
+    aspect-ratio:1/1; background:#fff; border:1px solid var(--line); border-radius:4px; overflow:hidden;
+  }
+  .about-photo img{ width:100%; height:100%; object-fit:cover; object-position:top center; }
+  .about-copy .eyebrow{ display:block; margin-bottom:14px; }
+  .about-copy h2{ font-size:28px; margin-bottom:16px; }
+  .about-copy p{ color:var(--slate); font-size:15px; margin-bottom:14px; }
+  .about-credentials{ display:flex; gap:28px; margin-top:22px; }
+  .cred-num{ font-family:'Source Serif 4', serif; font-size:22px; color:var(--navy); font-weight:600; }
+  .cred-label{ font-size:12px; color:var(--slate); }
+
+  .curriculum-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .module{ background:var(--paper); padding:30px 32px; display:flex; gap:20px; }
+  .module-num{ font-family:'Source Serif 4', serif; font-size:20px; color:var(--slate); flex-shrink:0; }
+  .module h3{ font-size:16px; margin-bottom:6px; }
+  .module p{ font-size:13.5px; color:var(--slate); }
+
+  .schedule{ background:var(--navy); padding:80px 0; }
+  .schedule .wrap{ display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:center; }
+  .schedule .eyebrow{ color:#7FD99F; display:block; margin-bottom:14px; }
+  .schedule h2{ color:#fff; font-size:30px; margin-bottom:16px; }
+  .schedule p{ color:#B8C0D1; font-size:15px; }
+  .schedule-card{ background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.14); border-radius:4px; padding:28px 30px; }
+  .schedule-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-size:14.5px; }
+  .schedule-row:last-child{ border-bottom:none; }
+  .schedule-row .time{ color:#9BA6BC; font-size:13px; }
+
+  .testimonials{ display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); }
+  .testimonial{ background:var(--paper); padding:40px 36px; }
+  .testimonial blockquote{ font-family:'Source Serif 4', serif; font-size:19px; color:var(--navy); line-height:1.5; margin-bottom:18px; font-weight:500; }
+  .testimonial cite{ font-style:normal; font-size:13px; color:var(--slate); }
+
+  .faq-item{ border-bottom:1px solid var(--line); padding:24px 0; }
+  .faq-item h3{ font-size:16px; margin-bottom:8px; font-weight:600; }
+  .faq-item p{ font-size:14.5px; color:var(--slate); max-width:640px; }
+
+  .final-cta{ background:var(--fog); padding:80px 0; text-align:center; }
+  .final-cta h2{ font-size:30px; margin-bottom:16px; }
+  .final-cta p{ color:var(--slate); font-size:15.5px; margin-bottom:30px; }
+
+  footer{ border-top:1px solid var(--line); padding:56px 0 36px; }
+  .footer-top{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; margin-bottom:40px; }
+  .footer-brand{ font-family:'Source Serif 4', serif; font-size:17px; color:var(--navy); font-weight:600; margin-bottom:10px; }
+  .footer-top p{ font-size:13.5px; color:var(--slate); max-width:260px; }
+  .footer-col h4{ font-size:12.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--slate); margin-bottom:16px; }
+  .footer-col a{ display:block; font-size:14px; color:var(--ink); margin-bottom:10px; }
+  .footer-col a:hover{ color:var(--emerald); }
+  .footer-bottom{ border-top:1px solid var(--line); padding-top:24px; display:flex; justify-content:space-between; font-size:12.5px; color:var(--slate); }
+
+  @media (max-width:860px){
+    .hero .wrap, .about .wrap, .schedule .wrap{ grid-template-columns:1fr; }
+    .features, .curriculum-grid, .testimonials, .steps{ grid-template-columns:1fr; }
+    .stats .wrap{ grid-template-columns:1fr; }
+    .stats .stat + .stat{ border-left:none; border-top:1px solid var(--line); padding-top:20px; margin-top:20px; }
+    .nav-links{ display:none; }
+    .hero h1{ font-size:36px; }
+    .float-card{ display:none; }
+    .footer-top{ grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="110" cy="110" r="98" fill="none" stroke="#1F2A44" stroke-width="6"/>
+        <path d="M110 40 L134 148 L110 122 L86 148 Z" fill="#1F2A44"/>
+        <circle cx="110" cy="24" r="9" fill="#16A34A"/>
+      </svg>
+      <span class="brand-name">Northbound Sessions</span>
+    </div>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#curriculum">Curriculum</a>
+      <a href="#about">Instructor</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <a href="/Account/Login" class="link-signin">Sign in</a>
+      <a href="/Account/Register" class="btn-primary">Enroll now</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Daily market education</span>
+      <h1>Learn the markets in the time you <span class="accent">actually</span> have.</h1>
+      <p class="lede">A structured lesson lands automatically every weekday, complete with slides and a handout. Twice a week, the whole class gets on a call together. No more choosing between showing up daily or not at all.</p>
+      <div class="hero-actions">
+        <a href="/Account/Register" class="btn-primary">Enroll now</a>
+        <a href="#how" class="btn-secondary-link">See how it works</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-image-slot">
+        <!-- Put your hero photo at wwwroot/images/hero.jpg — a 4:5 portrait
+             crop works best (e.g. 1000x1250px). object-fit:cover means it
+             will crop to fill this box, so don't worry about exact size. -->
+        <img src="images/hero.jpg" alt="Instructor teaching a live trading session">
+      </div>
+      <div class="float-card float-1">
+        <div class="float-icon">✓</div>
+        <div><div class="float-title">Auto-graded quizzes</div><div class="float-sub">Results in seconds</div></div>
+      </div>
+      <div class="float-card float-2">
+        <div class="float-icon">◆</div>
+        <div><div class="float-title">Live Tue &amp; Thu</div><div class="float-sub">7:00 PM, via Google Meet</div></div>
+      </div>
+      <div class="float-card float-3">
+        <div class="float-icon">▤</div>
+        <div><div class="float-title">Slides + handout</div><div class="float-sub">Generated every lesson</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="wrap">
+    <div class="stat"><div class="stat-num">5</div><div class="stat-label">Lessons released weekly</div></div>
+    <div class="stat"><div class="stat-num">2</div><div class="stat-label">Live sessions, Tue &amp; Thu</div></div>
+    <div class="stat"><div class="stat-num">4</div><div class="stat-label">Core curriculum modules</div></div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="section-head">
+    <span class="eyebrow">How it works</span>
+    <h2>One rhythm, repeated all term</h2>
+    <p>The same four steps happen every week, so there's nothing new to figure out after week one.</p>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="step-num">01</span><h3>Lesson delivered</h3><p>A new lesson, slide deck, and handout arrive automatically each weekday morning.</p></div>
+    <div class="step"><span class="step-num">02</span><h3>Work at your pace</h3><p>Read, watch, and complete a short quiz whenever your day allows it.</p></div>
+    <div class="step"><span class="step-num">03</span><h3>Live session</h3><p>Tuesday and Thursday evenings, the class meets for recap, questions, and discussion.</p></div>
+    <div class="step"><span class="step-num">04</span><h3>Progress tracked</h3><p>Quiz scores and attendance roll up automatically, so nothing falls through the cracks.</p></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="section-head">
+    <span class="eyebrow">What's included</span>
+    <h2>Everything a live class gives you, none of the attendance pressure</h2>
+    <p>The format changed. The substance of what you're taught didn't.</p>
+  </div>
+  <div class="features">
+    <div class="feature"><div class="feature-icon">▤</div><h3>Daily lessons</h3><p>Structured, sequential material — not a video library you have to figure out on your own.</p></div>
+    <div class="feature"><div class="feature-icon">◆</div><h3>Live sessions</h3><p>Real-time access to the instructor twice a week, for the questions that actually need a conversation.</p></div>
+    <div class="feature"><div class="feature-icon">✓</div><h3>Auto-graded quizzes</h3><p>Know immediately whether a concept landed, instead of waiting for feedback.</p></div>
+    <div class="feature"><div class="feature-icon">◷</div><h3>Progress dashboard</h3><p>See exactly where you stand — lessons completed, quiz scores, attendance — in one place.</p></div>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="wrap">
+    <div class="about-photo">
+      <!-- Put the instructor headshot at wwwroot/images/instructor.jpg —
+           a square crop works best (e.g. 800x800px). -->
+      <img src="images/instructor.jpg" alt="Photo of the instructor">
+    </div>
+    <div class="about-copy">
+      <span class="eyebrow">Your instructor</span>
+      <h2>Taught by someone who's actually run the class live, every day, for years</h2>
+      <p>[Instructor name] has taught this material as a live daily class before moving it into this format — the curriculum isn't new, only how it reaches you is. [One or two sentences on background: years trading, years teaching, notable focus area.]</p>
+      <div class="about-credentials">
+        <div><div class="cred-num">[X] yrs</div><div class="cred-label">Teaching experience</div></div>
+        <div><div class="cred-num">[X]+</div><div class="cred-label">Students taught</div></div>
+        <div><div class="cred-num">[X] yrs</div><div class="cred-label">Trading experience</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="curriculum">
+  <div class="section-head">
+    <span class="eyebrow">Curriculum</span>
+    <h2>Four modules, built to compound on each other</h2>
+    <p>Each module builds on the last — nothing is taught in isolation.</p>
+  </div>
+  <div class="curriculum-grid">
+    <div class="module"><span class="module-num">01</span><div><h3>Foundations</h3><p>Market structure, order types, and the vocabulary everything else depends on.</p></div></div>
+    <div class="module"><span class="module-num">02</span><div><h3>Technical analysis</h3><p>Reading charts, identifying trends, and recognizing patterns with actual context.</p></div></div>
+    <div class="module"><span class="module-num">03</span><div><h3>Risk management</h3><p>Position sizing, stop-losses, and the discipline that separates a plan from a guess.</p></div></div>
+    <div class="module"><span class="module-num">04</span><div><h3>Applied practice</h3><p>Paper-trading drills and live-session walkthroughs using real, current market examples.</p></div></div>
+  </div>
+</section>
+
+<section class="schedule" id="schedule">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Weekly schedule</span>
+      <h2>A week that respects your calendar</h2>
+      <p>Self-paced days keep you moving. Two live sessions keep you connected to the instructor and the rest of the class.</p>
+    </div>
+    <div class="schedule-card">
+      <div class="schedule-row"><span>Monday</span><span class="time">Lesson released, self-paced</span></div>
+      <div class="schedule-row"><span>Tuesday</span><span class="time">Live session, 7:00 PM</span></div>
+      <div class="schedule-row"><span>Wednesday</span><span class="time">Lesson released, self-paced</span></div>
+      <div class="schedule-row"><span>Thursday</span><span class="time">Live session, 7:00 PM</span></div>
+      <div class="schedule-row"><span>Friday</span><span class="time">Lesson released, self-paced</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <span class="eyebrow">From the pilot cohort</span>
+    <h2>What early students said</h2>
+  </div>
+  <div class="testimonials">
+    <div class="testimonial"><blockquote>"The daily rhythm is what made it stick. I stopped missing weeks at a time."</blockquote><cite>— Placeholder, pilot student</cite></div>
+    <div class="testimonial"><blockquote>"Having the live session twice a week instead of daily actually made me show up more, not less."</blockquote><cite>— Placeholder, pilot student</cite></div>
+  </div>
+</section>
+
+<section class="section" id="faq" style="padding-top:0;">
+  <div class="section-head">
+    <span class="eyebrow">Questions</span>
+    <h2>Before you enroll</h2>
+  </div>
+  <div style="max-width:720px; margin:0 auto;">
+    <div class="faq-item"><h3>Do I need prior trading experience?</h3><p>No — Module 1 starts from market fundamentals. Some baseline comfort with numbers helps, but no trading background is assumed.</p></div>
+    <div class="faq-item"><h3>What if I miss a live session?</h3><p>[State your policy here — e.g., sessions are recorded, or the next one covers a recap.]</p></div>
+    <div class="faq-item"><h3>How much time does this take weekly?</h3><p>[State your real estimate — e.g., roughly 30-45 minutes per weekday lesson, plus the two live sessions.]</p></div>
+    <div class="faq-item"><h3>What does it cost?</h3><p>[Pricing/enrollment terms go here.]</p></div>
+    <div class="faq-item"><h3>Is there a limit on cohort size?</h3><p>Yes — kept small so live sessions stay genuinely interactive rather than a broadcast.</p></div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="wrap">
+    <h2>Ready to start?</h2>
+    <p>Applications are reviewed on a rolling basis for the current cohort.</p>
+    <a href="/Account/Register" class="btn-primary">Enroll now</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand">Northbound Sessions</div>
+        <p>Daily market education, built around a real weekly rhythm instead of daily live attendance.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Class</h4>
+        <a href="#how">How it works</a>
+        <a href="#curriculum">Curriculum</a>
+        <a href="#schedule">Schedule</a>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <a href="/Account/Login">Sign in</a>
+        <a href="/Account/Register">Enroll now</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="#">[email address]</a>
+        <a href="#">[social/LinkedIn]</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Northbound Sessions</span>
+      <span>Built for a single instructor, a small cohort, and an honest calendar</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
