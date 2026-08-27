@@ -2,16 +2,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy solution and project files first so Docker can cache the restore step
 COPY NorthboundSessions.slnx .
 COPY src/NorthboundSessions.Web/*.csproj src/NorthboundSessions.Web/
 COPY src/NorthboundSessions.Data/*.csproj src/NorthboundSessions.Data/
 COPY src/NorthboundSessions.Jobs/*.csproj src/NorthboundSessions.Jobs/
-RUN dotnet restore
+RUN dotnet restore NorthboundSessions.slnx
 
-# Copy the rest of the source and publish
 COPY . .
-RUN dotnet publish src/NorthboundSessions.Web -c Release -o /app/publish --no-restore
+RUN dotnet publish src/NorthboundSessions.Web -c Release -o /app/publish
 
 # --- Runtime stage ---
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
