@@ -56,15 +56,28 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-//Render the index.html file in wwwroot folder
 app.UseDefaultFiles();
+
 app.UseStaticFiles();
 
 app.MapStaticAssets();
+
+app.MapGet("/", async context =>
+
+{
+
+    context.Response.ContentType = "text/html";
+
+    await context.Response.SendFileAsync(
+
+        Path.Combine(app.Environment.WebRootPath, "index.html"));
+
+});
+
 app.MapRazorComponents<App>()
+
     .AddInteractiveServerRenderMode();
 
-// Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
