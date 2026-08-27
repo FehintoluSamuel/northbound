@@ -45,6 +45,6 @@ jobs:
       - name: Update Container App to use the new image
         run: |
           az containerapp update \
-            --name northbound-sessions.salmonmeadow-3cdbf2c1.southafricanorth.azurecontainerapps.io\
+            --name northbound-sessions \
             --resource-group northbound-sessions-rg \
             --image ${{ env.IMAGE_NAME }}:${{ github.sha }}
