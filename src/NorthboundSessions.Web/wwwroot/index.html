@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Northbound Sessions — Daily market education</title>
+<title>Northbound Sessions | Practical stock-market education</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -58,6 +58,7 @@
     box-shadow:0 12px 28px -8px rgba(31,42,68,0.18);
   }
   .float-icon{ width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .float-icon svg, .feature-icon svg{ width:17px; height:17px; stroke-width:2; }
   .float-1{ top:-18px; left:-36px; }
   .float-1 .float-icon{ background:#E9F5EE; color:var(--emerald); }
   .float-2{ bottom:56px; right:-40px; }
@@ -176,7 +177,7 @@
     </div>
     <div class="nav-right">
       <a href="/Account/Login" class="link-signin">Sign in</a>
-      <a href="/Account/Register" class="btn-primary">Enroll now</a>
+      <a href="/Account/Register" class="btn-primary">Apply</a>
     </div>
   </div>
 </nav>
@@ -184,32 +185,29 @@
 <section class="hero">
   <div class="wrap">
     <div>
-      <span class="eyebrow">Daily market education</span>
-      <h1>Learn the markets in the time you <span class="accent">actually</span> have.</h1>
-      <p class="lede">A structured lesson lands automatically every weekday, complete with slides and a handout. Twice a week, the whole class gets on a call together. No more choosing between showing up daily or not at all.</p>
+      <span class="eyebrow">Stock-market education for beginners</span>
+      <h1>Build the judgment to navigate the stock market with <span class="accent">clarity.</span></h1>
+      <p class="lede">Northbound Sessions is a structured learning experience for people who want to understand stocks, analyze opportunities, manage risk, and make independent decisions without relying on blind signals or get-rich-quick promises.</p>
       <div class="hero-actions">
-        <a href="/Account/Register" class="btn-primary">Enroll now</a>
+        <a href="/Account/Register" class="btn-primary">Apply</a>
         <a href="#how" class="btn-secondary-link">See how it works</a>
       </div>
     </div>
     <div class="hero-visual">
       <div class="hero-image-slot">
-        <!-- Put your hero photo at wwwroot/images/hero.jpg — a 4:5 portrait
-             crop works best (e.g. 1000x1250px). object-fit:cover means it
-             will crop to fill this box, so don't worry about exact size. -->
-        <img src="images/hero.jpg" alt="Instructor teaching a live trading session">
+        <img src="images/hero.jpg" alt="Fehintolu Samuel teaching a stock-market lesson">
       </div>
       <div class="float-card float-1">
-        <div class="float-icon">✓</div>
-        <div><div class="float-title">Auto-graded quizzes</div><div class="float-sub">Results in seconds</div></div>
+        <div class="float-icon"><i data-lucide="check-circle" aria-hidden="true"></i></div>
+        <div><div class="float-title">Short knowledge checks</div><div class="float-sub">Feedback after each lesson</div></div>
       </div>
       <div class="float-card float-2">
-        <div class="float-icon">◆</div>
-        <div><div class="float-title">Live Tue &amp; Thu</div><div class="float-sub">7:00 PM, via Google Meet</div></div>
+        <div class="float-icon"><i data-lucide="calendar-days" aria-hidden="true"></i></div>
+        <div><div class="float-title">Live Thu, Sat &amp; Sun</div><div class="float-sub">Two hours per session</div></div>
       </div>
       <div class="float-card float-3">
-        <div class="float-icon">▤</div>
-        <div><div class="float-title">Slides + handout</div><div class="float-sub">Generated every lesson</div></div>
+        <div class="float-icon"><i data-lucide="book-open" aria-hidden="true"></i></div>
+        <div><div class="float-title">Lessons and resources</div><div class="float-sub">A clear path through the material</div></div>
       </div>
     </div>
   </div>
@@ -217,23 +215,23 @@
 
 <section class="stats">
   <div class="wrap">
-    <div class="stat"><div class="stat-num">5</div><div class="stat-label">Lessons released weekly</div></div>
-    <div class="stat"><div class="stat-num">2</div><div class="stat-label">Live sessions, Tue &amp; Thu</div></div>
-    <div class="stat"><div class="stat-num">4</div><div class="stat-label">Core curriculum modules</div></div>
+    <div class="stat"><div class="stat-num">5</div><div class="stat-label">Self-paced lessons each week</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">Live sessions each week</div></div>
+    <div class="stat"><div class="stat-num">2 hrs</div><div class="stat-label">Expected weekday study time</div></div>
   </div>
 </section>
 
 <section class="section" id="how">
   <div class="section-head">
     <span class="eyebrow">How it works</span>
-    <h2>One rhythm, repeated all term</h2>
-    <p>The same four steps happen every week, so there's nothing new to figure out after week one.</p>
+    <h2>A clear rhythm for serious learning</h2>
+    <p>Each week combines focused study with live discussion, giving you room to learn independently and a regular place to ask better questions.</p>
   </div>
   <div class="steps">
-    <div class="step"><span class="step-num">01</span><h3>Lesson delivered</h3><p>A new lesson, slide deck, and handout arrive automatically each weekday morning.</p></div>
-    <div class="step"><span class="step-num">02</span><h3>Work at your pace</h3><p>Read, watch, and complete a short quiz whenever your day allows it.</p></div>
-    <div class="step"><span class="step-num">03</span><h3>Live session</h3><p>Tuesday and Thursday evenings, the class meets for recap, questions, and discussion.</p></div>
-    <div class="step"><span class="step-num">04</span><h3>Progress tracked</h3><p>Quiz scores and attendance roll up automatically, so nothing falls through the cracks.</p></div>
+    <div class="step"><span class="step-num">01</span><h3>Study the lesson</h3><p>A new structured lesson is released each weekday with supporting slides and a handout.</p></div>
+    <div class="step"><span class="step-num">02</span><h3>Test your understanding</h3><p>Complete a short quiz and get an immediate result while the ideas are still fresh.</p></div>
+    <div class="step"><span class="step-num">03</span><h3>Join the discussion</h3><p>Meet live on Thursday, Saturday, and Sunday for explanation, questions, and practical examples.</p></div>
+    <div class="step"><span class="step-num">04</span><h3>Review your progress</h3><p>Use your dashboard to keep track of completed lessons, quiz scores, and attendance.</p></div>
   </div>
 </section>
 
@@ -244,28 +242,28 @@
     <p>The format changed. The substance of what you're taught didn't.</p>
   </div>
   <div class="features">
-    <div class="feature"><div class="feature-icon">▤</div><h3>Daily lessons</h3><p>Structured, sequential material — not a video library you have to figure out on your own.</p></div>
-    <div class="feature"><div class="feature-icon">◆</div><h3>Live sessions</h3><p>Real-time access to the instructor twice a week, for the questions that actually need a conversation.</p></div>
-    <div class="feature"><div class="feature-icon">✓</div><h3>Auto-graded quizzes</h3><p>Know immediately whether a concept landed, instead of waiting for feedback.</p></div>
-    <div class="feature"><div class="feature-icon">◷</div><h3>Progress dashboard</h3><p>See exactly where you stand — lessons completed, quiz scores, attendance — in one place.</p></div>
+    <div class="feature"><div class="feature-icon"><i data-lucide="layers" aria-hidden="true"></i></div><h3>Structured lessons</h3><p>Work through sequential material that builds from market foundations to applied stock analysis.</p></div>
+    <div class="feature"><div class="feature-icon"><i data-lucide="messages-square" aria-hidden="true"></i></div><h3>Live sessions</h3><p>Bring difficult questions to three weekly sessions designed for explanation and discussion.</p></div>
+    <div class="feature"><div class="feature-icon"><i data-lucide="badge-check" aria-hidden="true"></i></div><h3>Knowledge checks</h3><p>Receive an immediate quiz score so you can spot gaps before moving forward.</p></div>
+    <div class="feature"><div class="feature-icon"><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i></div><h3>Progress dashboard</h3><p>Keep completed lessons, quiz scores, and attendance visible in one place.</p></div>
   </div>
 </section>
 
 <section class="about" id="about">
   <div class="wrap">
     <div class="about-photo">
-      <!-- Put the instructor headshot at wwwroot/images/instructor.jpg —
-           a square crop works best (e.g. 800x800px). -->
-      <img src="images/instructor.jpg" alt="Photo of the instructor">
+       <img src="images/instructor.jpg" alt="Fehintolu Samuel, stock-market educator and software engineer">
     </div>
     <div class="about-copy">
       <span class="eyebrow">Your instructor</span>
-      <h2>Taught by someone who's actually run the class live, every day, for years</h2>
-      <p>[Instructor name] has taught this material as a live daily class before moving it into this format — the curriculum isn't new, only how it reaches you is. [One or two sentences on background: years trading, years teaching, notable focus area.]</p>
+      <h2>Learn with Fehintolu Samuel</h2>
+      <p>Fehintolu Samuel is a Stock Market Educator and Software Engineer with several years of experience teaching software development, AI and machine learning, and stock-market education.</p>
+      <p>His background includes Metallurgical and Materials Engineering, computational neuroscience research through the ThinkNeuro program at the University of California, Berkeley, and work at Cyart. He applies AI to biomedical problems and contributes to disease detection solutions.</p>
+      <p>Northbound Sessions brings that practical, structured approach to stocks and equities. The goal is to help students understand what they are seeing, manage risk responsibly, and build their own decision-making process.</p>
       <div class="about-credentials">
-        <div><div class="cred-num">[X] yrs</div><div class="cred-label">Teaching experience</div></div>
-        <div><div class="cred-num">[X]+</div><div class="cred-label">Students taught</div></div>
-        <div><div class="cred-num">[X] yrs</div><div class="cred-label">Trading experience</div></div>
+        <div><div class="cred-num">Several</div><div class="cred-label">Years teaching</div></div>
+        <div><div class="cred-num">5 yrs</div><div class="cred-label">Market experience</div></div>
+        <div><div class="cred-num">Stocks</div><div class="cred-label">Primary market</div></div>
       </div>
     </div>
   </div>
@@ -275,7 +273,7 @@
   <div class="section-head">
     <span class="eyebrow">Curriculum</span>
     <h2>Four modules, built to compound on each other</h2>
-    <p>Each module builds on the last — nothing is taught in isolation.</p>
+    <p>Each module builds on the last, so you can connect market concepts instead of studying them in isolation.</p>
   </div>
   <div class="curriculum-grid">
     <div class="module"><span class="module-num">01</span><div><h3>Foundations</h3><p>Market structure, order types, and the vocabulary everything else depends on.</p></div></div>
@@ -290,26 +288,17 @@
     <div>
       <span class="eyebrow">Weekly schedule</span>
       <h2>A week that respects your calendar</h2>
-      <p>Self-paced days keep you moving. Two live sessions keep you connected to the instructor and the rest of the class.</p>
+      <p>Self-paced weekdays keep you moving. Three live sessions keep you connected to the instructor and the rest of the class.</p>
     </div>
     <div class="schedule-card">
       <div class="schedule-row"><span>Monday</span><span class="time">Lesson released, self-paced</span></div>
-      <div class="schedule-row"><span>Tuesday</span><span class="time">Live session, 7:00 PM</span></div>
+      <div class="schedule-row"><span>Tuesday</span><span class="time">Lesson released, self-paced</span></div>
       <div class="schedule-row"><span>Wednesday</span><span class="time">Lesson released, self-paced</span></div>
-      <div class="schedule-row"><span>Thursday</span><span class="time">Live session, 7:00 PM</span></div>
+      <div class="schedule-row"><span>Thursday</span><span class="time">Live session, 2 hours</span></div>
       <div class="schedule-row"><span>Friday</span><span class="time">Lesson released, self-paced</span></div>
+      <div class="schedule-row"><span>Saturday</span><span class="time">Live session, 2 hours</span></div>
+      <div class="schedule-row"><span>Sunday</span><span class="time">Live session, 2 hours</span></div>
     </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="section-head">
-    <span class="eyebrow">From the pilot cohort</span>
-    <h2>What early students said</h2>
-  </div>
-  <div class="testimonials">
-    <div class="testimonial"><blockquote>"The daily rhythm is what made it stick. I stopped missing weeks at a time."</blockquote><cite>— Placeholder, pilot student</cite></div>
-    <div class="testimonial"><blockquote>"Having the live session twice a week instead of daily actually made me show up more, not less."</blockquote><cite>— Placeholder, pilot student</cite></div>
   </div>
 </section>
 
@@ -319,11 +308,11 @@
     <h2>Before you enroll</h2>
   </div>
   <div style="max-width:720px; margin:0 auto;">
-    <div class="faq-item"><h3>Do I need prior trading experience?</h3><p>No — Module 1 starts from market fundamentals. Some baseline comfort with numbers helps, but no trading background is assumed.</p></div>
-    <div class="faq-item"><h3>What if I miss a live session?</h3><p>[State your policy here — e.g., sessions are recorded, or the next one covers a recap.]</p></div>
-    <div class="faq-item"><h3>How much time does this take weekly?</h3><p>[State your real estimate — e.g., roughly 30-45 minutes per weekday lesson, plus the two live sessions.]</p></div>
-    <div class="faq-item"><h3>What does it cost?</h3><p>[Pricing/enrollment terms go here.]</p></div>
-    <div class="faq-item"><h3>Is there a limit on cohort size?</h3><p>Yes — kept small so live sessions stay genuinely interactive rather than a broadcast.</p></div>
+    <div class="faq-item"><h3>Do I need prior trading experience?</h3><p>No. The curriculum begins with market fundamentals and develops from there. No stock-market background is assumed.</p></div>
+    <div class="faq-item"><h3>When are the live sessions?</h3><p>Live sessions take place on Thursday, Saturday, and Sunday. Each session lasts two hours.</p></div>
+    <div class="faq-item"><h3>How much time should I set aside?</h3><p>Plan for about two hours of study on each weekday, in addition to the live sessions.</p></div>
+    <div class="faq-item"><h3>How do I get enrollment and pricing information?</h3><p>Apply through the main application. Enrollment and pricing details are provided there.</p></div>
+    <div class="faq-item"><h3>What will I learn?</h3><p>You will study market foundations, stock analysis, risk management, and practical decision-making for equities.</p></div>
   </div>
 </section>
 
@@ -331,7 +320,7 @@
   <div class="wrap">
     <h2>Ready to start?</h2>
     <p>Applications are reviewed on a rolling basis for the current cohort.</p>
-    <a href="/Account/Register" class="btn-primary">Enroll now</a>
+    <a href="/Account/Register" class="btn-primary">Apply</a>
   </div>
 </section>
 
@@ -351,20 +340,23 @@
       <div class="footer-col">
         <h4>Account</h4>
         <a href="/Account/Login">Sign in</a>
-        <a href="/Account/Register">Enroll now</a>
+        <a href="/Account/Register">Apply</a>
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
-        <a href="#">[email address]</a>
-        <a href="#">[social/LinkedIn]</a>
+        <a href="mailto:fehintolusamuel@outlook.com">fehintolusamuel@outlook.com</a>
+        <a href="https://linkedin.com/in/fehintolu-samuel" target="_blank" rel="noreferrer">LinkedIn</a>
+        <a href="https://github.com/FehintoluSamuel" target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </div>
     <div class="footer-bottom">
       <span>© 2026 Northbound Sessions</span>
-      <span>Built for a single instructor, a small cohort, and an honest calendar</span>
+      <span>Practical education for independent decision-making</span>
     </div>
   </div>
 </footer>
 
+<script src="lib/lucide/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>
