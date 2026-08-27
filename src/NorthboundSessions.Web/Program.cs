@@ -56,6 +56,10 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
+//Render the index.html file in wwwroot folder
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
