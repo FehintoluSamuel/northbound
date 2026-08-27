@@ -12,8 +12,8 @@ using NorthboundSessions.Web.Data;
 namespace NorthboundSessions.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260826101441_InitialCreat")]
-    partial class InitialCreat
+    [Migration("20260827082729_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
