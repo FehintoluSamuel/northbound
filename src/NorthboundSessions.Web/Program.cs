@@ -23,6 +23,9 @@ builder.Services.AddAuthentication(options =>
     .AddIdentityCookies();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
+
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
