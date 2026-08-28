@@ -1,3 +1,128 @@
+/* Add to the top of wwwroot/app.css, or wherever your existing styles live */
+:root {
+    --navy: #1F2A44;
+    --emerald: #16A34A;
+    --fog: #F3F4F6;
+    --ink: #111827;
+    --slate: #6B7280;
+    --line: #E1E3E8;
+  }
+  
+  .brand-heading {
+    font-family: 'Source Serif 4', serif;
+    color: var(--navy);
+  }
+  
+  .btn-brand-primary {
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .btn-brand-primary:hover {
+    background: #152038;
+  }
+  
+  .auth-card {
+    max-width: 420px;
+    margin: 80px auto;
+    padding: 40px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #fff;
+  }
+
+  .auth-shell {
+    min-height: 100vh;
+    background: var(--fog, #F3F4F6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  
+  .auth-card-outer {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px -20px rgba(31,42,68,0.25);
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 16px;
+    max-width: 1100px;
+    width: 100%;
+  }
+  
+  .auth-visual {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--navy, #1F2A44);
+    min-height: 560px;
+  }
+  .auth-visual img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .auth-quote {
+    position: absolute; left: 20px; right: 20px; bottom: 20px;
+    background: rgba(31,42,68,0.55);
+    backdrop-filter: blur(6px);
+    color: #fff; padding: 22px; border-radius: 8px;
+  }
+  .auth-quote blockquote {
+    font-family: 'Source Serif 4', serif;
+    font-size: 17px; line-height: 1.5; margin-bottom: 12px;
+  }
+  .auth-quote cite { font-style: normal; font-size: 13px; opacity: 0.85; }
+  
+  .auth-panel {
+    display: flex; align-items: center; justify-content: center;
+    padding: 32px;
+  }
+  .auth-card { width: 100%; max-width: 380px; }
+  
+  .auth-logo {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 28px; text-decoration: none;
+    color: var(--navy, #1F2A44); font-family: 'Source Serif 4', serif;
+    font-weight: 600; font-size: 16px;
+  }
+  
+  .auth-card h1 {
+    font-family: 'Source Serif 4', serif;
+    color: var(--navy, #1F2A44);
+    font-size: 26px; margin-bottom: 6px;
+  }
+  .auth-card .auth-subtitle { color: var(--slate, #6B7280); font-size: 14px; margin-bottom: 26px; }
+  
+  .auth-field { margin-bottom: 16px; }
+  .auth-field label { display: block; font-size: 13.5px; font-weight: 500; color: var(--ink, #111827); margin-bottom: 6px; }
+  .auth-field .form-control {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--line, #E1E3E8);
+    border-radius: 6px; font-size: 14.5px; box-sizing: border-box;
+  }
+  .auth-field .form-control:focus { outline: none; border-color: var(--navy, #1F2A44); }
+  
+  .btn-brand-primary {
+    width: 100%; background: var(--navy, #1F2A44); color: #fff; border: none;
+    padding: 12px; border-radius: 6px; font-weight: 500; font-size: 15px; cursor: pointer;
+  }
+  .btn-brand-primary:hover { background: #152038; }
+  
+  .auth-switch { text-align: center; font-size: 14px; color: var(--slate, #6B7280); margin-top: 20px; }
+  .auth-switch a { color: var(--navy, #1F2A44); font-weight: 500; }
+  
+  /* Mobile: shrink and stack the image as a banner instead of hiding it */
+  @media (max-width: 860px) {
+    .auth-card-outer { grid-template-columns: 1fr; }
+    .auth-visual { min-height: 220px; }
+    .auth-quote { display: none; } /* too cramped to read at this size */
+  }
+
+  
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }

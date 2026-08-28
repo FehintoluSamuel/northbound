@@ -1,0 +1,42 @@
+@page "/admin/lessons/create"
+@rendermode InteractiveServer
+@using NorthboundSessions.Data
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Web.Data
+@inject NavigationManager Nav
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+
+<h3>Create a Lesson</h3>
+
+<EditForm Model="@newLesson" OnValidSubmit="@SaveLesson">
+    <DataAnnotationsValidator />
+
+    <label>Title</label>
+    <InputText @bind-Value="newLesson.Title" />
+
+    <label>Outline Content</label>
+    <InputTextArea @bind-Value="newLesson.OutlineContent" />
+
+    <label>Release Date</label>
+    <InputDate @bind-Value="releaseDateProxy" />
+
+    <label>Is Live Day?</label>
+    <InputCheckbox @bind-Value="newLesson.IsLiveDay" />
+
+    <button type="submit">Save Lesson</button>
+</EditForm>
+
+@code {
+    private Lesson newLesson = new() { Title = "", OutlineContent = "" };
+    private DateTime releaseDateProxy;
+
+    private async Task SaveLesson()
+    {
+        newLesson.ReleaseDate = DateOnly.FromDateTime(releaseDateProxy);
+        await using var context = await DbFactory.CreateDbContextAsync();
+        context.Lessons.Add(newLesson);
+        await context.SaveChangesAsync();
+        Nav.NavigateTo("/admin/lessons/create");
+    }
+}

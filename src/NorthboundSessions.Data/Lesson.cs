@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace NorthboundSessions.Data;
 
 public class Lesson
@@ -12,4 +14,6 @@ public class Lesson
     public string? HandoutFilePath { get; set; }
     public ICollection<Quiz> Quizzes { get; set; } = new List<Quiz>();
 }
+
+
 

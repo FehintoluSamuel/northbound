@@ -7,4 +7,8 @@ public class Quiz
     public required string Title { get; set; }
     public Lesson? Lesson { get; set; }
     public ICollection<QuizQuestion> Questions { get; set; } = new List<QuizQuestion>();
+    public ICollection<QuizAttempt> QuizAttempt {get; set;} = new List<QuizAttempt>();
+
 }
+
+
