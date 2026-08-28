@@ -23,6 +23,16 @@ builder.Services.AddAuthentication(options =>
     .AddIdentityCookies();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+Console.WriteLine("=== DATABASE CONFIG ===");
+
+Console.WriteLine($"Connection string found: {!string.IsNullOrEmpty(connectionString)}");
+
+Console.WriteLine($"Connection string length: {connectionString.Length}");
+
+Console.WriteLine($"Connection string starts with: {connectionString.Substring(0, Math.Min(40, connectionString.Length))}");
+
+Console.WriteLine("======================");
+
 /*builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())); */
 
@@ -44,9 +54,17 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
+
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    var dbContextFactory = scope.ServiceProvider
+
+        .GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+
+    using var dbContext = dbContextFactory.CreateDbContext();
+
     dbContext.Database.Migrate();
+
 }
 
 // Configure the HTTP request pipeline.
