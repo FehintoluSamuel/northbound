@@ -19,7 +19,6 @@ var forwardedHeaderOptions = new ForwardedHeadersOptions
 forwardedHeaderOptions.KnownNetworks.Clear();
 forwardedHeaderOptions.KnownProxies.Clear();
 
-// ...rest of your existing pipeline continues below, unchanged
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -97,6 +96,10 @@ app.UseHttpsRedirection();
 app.UseForwardedHeaders(forwardedHeaderOptions);
 
 app.UseAntiforgery();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.UseDefaultFiles();
 

@@ -1,0 +1,25 @@
+/*AppLayout css*/
+.app-shell { display: flex; flex-direction: column; min-height: 100vh; }
+.app-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; background: #fff; border-bottom: 1px solid var(--line, #E1E3E8);
+}
+.app-logo { display: flex; }
+.app-avatar {
+  width: 30px; height: 30px; border-radius: 50%; background: #EAEEF6;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: var(--navy, #1F2A44);
+}
+.app-content { flex: 1; padding: 26px 24px 90px; max-width: 900px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+
+.app-bottombar {
+  position: sticky; bottom: 0;
+  display: flex; justify-content: space-around;
+  padding: 10px 0; background: #fff; border-top: 1px solid var(--line, #E1E3E8);
+}
+.app-tab {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  text-decoration: none; color: var(--slate, #6B7280); font-size: 11px;
+}
+.app-tab i { font-size: 19px; }
+.app-tab.active { color: var(--navy, #1F2A44); font-weight: 500; }

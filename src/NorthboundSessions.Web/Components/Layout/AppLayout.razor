@@ -1,0 +1,42 @@
+﻿@* src/NorthboundSessions.Web/Components/Layout/AppLayout.razor *@
+@inherits LayoutComponentBase
+
+<div class="app-shell">
+    <header class="app-topbar">
+        <a href="/dashboard" class="app-logo">
+            <svg viewBox="0 0 220 220" width="26" height="26">
+                <circle cx="110" cy="110" r="98" fill="none" stroke="#1F2A44" stroke-width="8"/>
+                <path d="M110 40 L134 148 L110 122 L86 148 Z" fill="#1F2A44"/>
+                <circle cx="110" cy="24" r="10" fill="#16A34A"/>
+            </svg>
+        </a>
+        <div class="app-avatar">FS</div>
+    </header>
+
+    <main class="app-content">
+        @Body
+    </main>
+
+    <nav class="app-bottombar">
+        <a href="/dashboard" class="app-tab active">
+            <i class="ti ti-layout-dashboard"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="/lessons" class="app-tab">
+            <i class="ti ti-book-2"></i>
+            <span>Lessons</span>
+        </a>
+        <a href="/quizzes" class="app-tab">
+            <i class="ti ti-checklist"></i>
+            <span>Quizzes</span>
+        </a>
+        <a href="/sessions" class="app-tab">
+            <i class="ti ti-calendar-event"></i>
+            <span>Sessions</span>
+        </a>
+        <a href="/progress" class="app-tab">
+            <i class="ti ti-chart-bar"></i>
+            <span>Progress</span>
+        </a>
+    </nav>
+</div>
