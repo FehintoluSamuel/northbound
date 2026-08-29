@@ -1,28 +1,69 @@
 @page "/dashboard"
+
 @layout AppLayout
+
+@using Microsoft.AspNetCore.Authorization
+
+@using NorthboundSessions.Web.Data
+
+@using NorthboundSessions.Data
+
 @attribute [Authorize]
+
 @rendermode InteractiveServer
+
 @using Microsoft.EntityFrameworkCore
+
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 
 <h1 class="brand-heading">Welcome back</h1>
 
+<AuthorizeView>
+
+    <Authorized>
+
+        <p>AUTHENTICATED</p>
+
+    </Authorized>
+
+    <NotAuthorized>
+
+        <p>NOT AUTHENTICATED</p>
+
+    </NotAuthorized>
+
+</AuthorizeView>
+
 @if (nextLesson is not null)
+
 {
+
     <div class="dashboard-card">
+
         <h3>Today's lesson</h3>
+
         <p>@nextLesson.Title</p>
+
         <a href="/lessons/@nextLesson.Id">View lesson</a>
+
     </div>
+
 }
 
 @if (nextSession is not null)
+
 {
+
     <div class="dashboard-card">
+
         <h3>Next live session</h3>
+
         <p>@nextSession.Topic — @nextSession.ScheduledAt.ToLocalTime().ToString("f")</p>
+
         <a href="@nextSession.MeetLink" target="_blank">Join Meet</a>
+
     </div>
+
 }
 
 @code {

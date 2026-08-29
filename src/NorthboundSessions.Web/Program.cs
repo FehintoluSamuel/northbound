@@ -95,11 +95,11 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 app.UseForwardedHeaders(forwardedHeaderOptions);
 
-app.UseAntiforgery();
-
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseAntiforgery();
 
 app.UseDefaultFiles();
 
