@@ -7,6 +7,20 @@ using NorthboundSessions.Web.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Azure Container Apps terminates HTTPS at its own ingress and forwards
+// plain HTTP to the container — without this, ASP.NET Core doesn't know
+// the original request was actually HTTPS, which breaks Identity's
+// cookie/antiforgery handling specifically (not simple GET requests).
+var forwardedHeaderOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedHeaderOptions.KnownNetworks.Clear();
+forwardedHeaderOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeaderOptions);
+
+// ...rest of your existing pipeline continues below, unchanged
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
