@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using NorthboundSessions.Web.Components;
 using NorthboundSessions.Web.Components.Account;
 using NorthboundSessions.Web.Data;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,6 @@ var forwardedHeaderOptions = new ForwardedHeadersOptions
 };
 forwardedHeaderOptions.KnownNetworks.Clear();
 forwardedHeaderOptions.KnownProxies.Clear();
-app.UseForwardedHeaders(forwardedHeaderOptions);
 
 // ...rest of your existing pipeline continues below, unchanged
 
@@ -94,6 +94,7 @@ else
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+app.UseForwardedHeaders(forwardedHeaderOptions);
 
 app.UseAntiforgery();
 
