@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using NorthboundSessions.Web.Services;
 using NorthboundSessions.Web.Components;
 using NorthboundSessions.Web.Components.Account;
 using NorthboundSessions.Web.Data;
 using Microsoft.AspNetCore.HttpOverrides;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +54,7 @@ Console.WriteLine("======================");
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddScoped<QuizService>();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
