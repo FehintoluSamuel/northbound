@@ -1,0 +1,80 @@
+@page "/admin/topics/create"
+@rendermode InteractiveServer
+@layout AppLayout
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Data
+@using NorthboundSessions.Web.Data
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject NavigationManager Nav
+
+<h3>Add a topic to the bank</h3>
+
+<EditForm Model="this" FormName="CreateTopic" OnValidSubmit="SaveTopic">
+    <label>Title</label>
+    <InputText @bind-Value="newTopic.Title" />
+
+    <label>Outline Content</label>
+    <InputTextArea @bind-Value="newTopic.OutlineContent" rows="6" />
+
+    <label>Market Symbol (optional, e.g. NYSE:NKE)</label>
+    <InputText @bind-Value="newTopic.MarketSymbol" />
+
+    <hr />
+    <h4>Quiz Questions</h4>
+
+    @foreach (var question in newTopic.Questions)
+    {
+        <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+            <label>Question text</label>
+            <InputText @bind-Value="question.QuestionText" />
+
+            <h5>Options</h5>
+            @foreach (var option in question.Options)
+            {
+                <div>
+                    <InputText @bind-Value="option.OptionText" placeholder="Option text" />
+                    <label>
+                        <InputCheckbox @bind-Value="option.IsCorrect" /> Correct answer
+                    </label>
+                </div>
+            }
+            <button type="button" @onclick="() => AddOption(question)">+ Add option</button>
+        </div>
+    }
+    <button type="button" @onclick="AddQuestion">+ Add question</button>
+
+    <hr />
+    <button type="submit">Save topic</button>
+</EditForm>
+
+@code {
+    private TopicBankItem newTopic = new() { Title = "", OutlineContent = "" };
+
+    private void AddQuestion()
+    {
+        newTopic.Questions.Add(new BankQuestion
+        {
+            QuestionText = "",
+            DisplayOrder = newTopic.Questions.Count + 1
+        });
+    }
+
+    private void AddOption(BankQuestion question)
+    {
+        question.Options.Add(new BankOption
+        {
+            OptionText = "",
+            DisplayOrder = question.Options.Count + 1
+        });
+    }
+
+    private async Task SaveTopic()
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        context.TopicBankItems.Add(newTopic);
+        await context.SaveChangesAsync();
+        Nav.NavigateTo("/admin/topics/create");
+    }
+}

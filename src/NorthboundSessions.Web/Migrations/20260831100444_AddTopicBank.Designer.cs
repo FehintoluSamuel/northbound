@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NorthboundSessions.Web.Data;
 
@@ -11,9 +12,11 @@ using NorthboundSessions.Web.Data;
 namespace NorthboundSessions.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260831100444_AddTopicBank")]
+    partial class AddTopicBank
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -209,22 +212,29 @@ namespace NorthboundSessions.Web.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BankQuestionId")
+                    b.Property<int?>("BankOptionId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BankQuestionId")
                         .HasColumnType("int");
 
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsCorrect")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("OptionText")
+                    b.Property<string>("QuestionText")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TopicBankItemId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("BankOptionId");
+
                     b.HasIndex("BankQuestionId");
+
+                    b.HasIndex("TopicBankItemId");
 
                     b.ToTable("BankOptions");
                 });
@@ -625,13 +635,21 @@ namespace NorthboundSessions.Web.Migrations
 
             modelBuilder.Entity("NorthboundSessions.Data.BankOption", b =>
                 {
-                    b.HasOne("NorthboundSessions.Data.BankQuestion", "BankQuestion")
+                    b.HasOne("NorthboundSessions.Data.BankOption", null)
                         .WithMany("Options")
-                        .HasForeignKey("BankQuestionId")
+                        .HasForeignKey("BankOptionId");
+
+                    b.HasOne("NorthboundSessions.Data.BankQuestion", null)
+                        .WithMany("Options")
+                        .HasForeignKey("BankQuestionId");
+
+                    b.HasOne("NorthboundSessions.Data.TopicBankItem", "TopicBankItem")
+                        .WithMany()
+                        .HasForeignKey("TopicBankItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BankQuestion");
+                    b.Navigation("TopicBankItem");
                 });
 
             modelBuilder.Entity("NorthboundSessions.Data.BankQuestion", b =>
@@ -687,6 +705,11 @@ namespace NorthboundSessions.Web.Migrations
                         .IsRequired();
 
                     b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("NorthboundSessions.Data.BankOption", b =>
+                {
+                    b.Navigation("Options");
                 });
 
             modelBuilder.Entity("NorthboundSessions.Data.BankQuestion", b =>
