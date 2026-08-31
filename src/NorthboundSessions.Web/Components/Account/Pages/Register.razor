@@ -124,7 +124,7 @@
         {
             RedirectManager.RedirectTo(
                 "Account/RegisterConfirmation",
-                new() { ["email"] = Input.Email, ["/dashboard"] = ReturnUrl });
+                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
         }
         else
         {

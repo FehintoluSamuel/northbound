@@ -1,0 +1,80 @@
+@page "/quizzes/{QuizId:int}/take"
+@rendermode InteractiveServer
+@layout AppLayout
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject QuizService QuizService
+@inject NavigationManager Nav
+@using NorthboundSessions.Web.Services
+@using NorthboundSessions.Data
+
+<h3>@quiz?.Title</h3>
+
+@if (quiz is null && !finishedLoading)
+{
+    <p>Loading...</p>
+}
+else if (quiz is null)
+{
+    <p>No quiz found with that ID.</p>
+}
+else if (submittedAttempt is not null)
+{
+    <p>You scored @submittedAttempt.Score out of @quiz.Questions.Count.</p>
+    <button @onclick="@(() => Nav.NavigateTo("/dashboard"))">Back to dashboard</button>
+}
+else
+{
+    <EditForm Model="this" FormName="TakeQuiz" OnValidSubmit="HandleSubmit">
+        @foreach (var question in quiz.Questions)
+        {
+            <div style="margin-bottom: 20px;">
+                <p><strong>@question.QuestionText</strong></p>
+                @foreach (var option in question.Options)
+                {
+                    <label style="display:block;">
+                        <input type="radio"
+                               name="@("question-" + question.Id)"
+                               value="@option.Id"
+                               @onchange="@(() => selectedOptions[question.Id] = option.Id)" />
+                        @option.OptionText
+                    </label>
+                }
+            </div>
+        }
+        <button type="submit">Submit quiz</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int QuizId { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private Quiz? quiz;
+    private Dictionary<int, int> selectedOptions = new();
+    private QuizAttempt? submittedAttempt;
+    private string studentId = "";
+
+    private bool finishedLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        quiz = await QuizService.GetQuizWithDetailsAsync(QuizId);
+        finishedLoading = true;
+
+        if (AuthStateTask is not null)
+        {
+            var authState = await AuthStateTask;
+            studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        submittedAttempt = await QuizService.SubmitQuizAsync(QuizId, studentId, selectedOptions);
+    }
+}
