@@ -1,0 +1,61 @@
+@page "/sessions/{LiveSessionId:int}/checkin"
+@rendermode InteractiveServer
+@layout AppLayout
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Data
+@using NorthboundSessions.Web.Data
+@using NorthboundSessions.Web.Services
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AttendanceService AttendanceService
+
+@if (session is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <h3>@session.Topic</h3>
+    <p>@session.ScheduledAt.ToLocalTime().ToString("f")</p>
+
+    @if (checkedIn)
+    {
+        <p><strong>You're checked in. See you there!</strong></p>
+    }
+    else
+    {
+        <button @onclick="HandleCheckIn">I'm here</button>
+    }
+}
+
+@code {
+    [Parameter]
+    public int LiveSessionId { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private LiveSession? session;
+    private bool checkedIn = false;
+    private string studentId = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        session = await context.LiveSessions.FirstOrDefaultAsync(s => s.Id == LiveSessionId);
+
+        if (AuthStateTask is not null)
+        {
+            var authState = await AuthStateTask;
+            studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        }
+    }
+
+    private async Task HandleCheckIn()
+    {
+        await AttendanceService.CheckInAsync(LiveSessionId, studentId);
+        checkedIn = true;
+    }
+}

@@ -57,6 +57,7 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddScoped<QuizService>();
+builder.Services.AddScoped<AttendanceService>();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
