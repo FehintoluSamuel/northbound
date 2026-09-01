@@ -1,8 +1,9 @@
 @page "/admin/topics/create"
+@using Microsoft.AspNetCore.Authorization
 @rendermode InteractiveServer
 @layout AppLayout
-@attribute [Authorize]
-@using Microsoft.AspNetCore.Authorization
+@using NorthboundSessions.Web
+@attribute [Authorize(Roles = "Instructor")]
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Data
 @using NorthboundSessions.Web.Data

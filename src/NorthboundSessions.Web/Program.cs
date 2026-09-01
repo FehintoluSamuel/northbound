@@ -63,6 +63,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
         options.SignIn.RequireConfirmedAccount = false; //true; set this to true when we implement the email verification
         options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
@@ -129,5 +130,20 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapAdditionalIdentityEndpoints();
+
+//Seeding the Instructor role and assign it to my email
+using (var scope = app.Services.CreateScope()) 
+    { var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>(); 
+      var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>(); 
+        if (!await roleManager.RoleExistsAsync("Instructor")) 
+            { 
+                await roleManager.CreateAsync(new IdentityRole("Instructor")); 
+            } 
+      var instructorUser = await userManager.FindByEmailAsync("fehintolusamuel@gmail.com"); 
+        if (instructorUser is not null && !await userManager.IsInRoleAsync(instructorUser, "Instructor"))
+            { 
+                await userManager.AddToRoleAsync(instructorUser, "Instructor"); 
+            } 
+    } 
 
 app.Run();
