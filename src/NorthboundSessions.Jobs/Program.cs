@@ -10,16 +10,22 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())); 
 builder.Services.AddScoped<LessonGeneratorService>(); 
+builder.Services.AddScoped<EmailService>(); 
 
 var host = builder.Build(); 
 using var scope = host.Services.CreateScope(); 
 var generator = scope.ServiceProvider.GetRequiredService<LessonGeneratorService>(); 
 var lesson = await generator.GenerateNextLessonAsync(); 
+var emailService = scope.ServiceProvider.GetRequiredService<EmailService>(); 
 if (lesson is null) 
     { 
-    Console.WriteLine("No unused topics remain in the bank — nothing generated today."); 
+        Console.WriteLine("No unused topics remain in the bank — nothing generated today."); 
     } 
-else 
-    { 
-    Console.WriteLine($"Generated lesson: {lesson.Title} (Id: {lesson.Id})"); 
-    }
+else { 
+        Console.WriteLine($"Generated lesson: {lesson.Title} (Id: {lesson.Id})"); 
+        await emailService.SendEmailAsync( 
+            toEmail: "fehintolusamuel@outlook.com", 
+            subject: $"New lesson generated: {lesson.Title}", 
+            body: $"A new lesson was just auto-generated: {lesson.Title}, released {lesson.ReleaseDate}." 
+            ); 
+      }
