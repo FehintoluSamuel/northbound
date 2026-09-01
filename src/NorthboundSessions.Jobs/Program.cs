@@ -23,9 +23,7 @@ if (lesson is null)
     } 
 else { 
         Console.WriteLine($"Generated lesson: {lesson.Title} (Id: {lesson.Id})"); 
-        await emailService.SendEmailAsync( 
-            toEmail: "fehintolusamuel@outlook.com", 
-            subject: $"New lesson generated: {lesson.Title}", 
-            body: $"A new lesson was just auto-generated: {lesson.Title}, released {lesson.ReleaseDate}." 
-            ); 
+        await emailService.NotifyAllStudentsAsync
+            ( subject: $"New lesson available: {lesson.Title}", body: $"A new lesson is ready: {lesson.Title}. Log in to view it." 
+            );
       }
