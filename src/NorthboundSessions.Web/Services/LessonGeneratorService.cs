@@ -42,6 +42,7 @@ namespace NorthboundSessions.Web.Services
                 Title = nextTopic.Title, 
                 OutlineContent = nextTopic.OutlineContent, 
                 MarketSymbol = nextTopic.MarketSymbol, 
+                ImageBytes = nextTopic.ImageBytes, 
                 ReleaseDate = today, 
                 IsLiveDay = isLiveDay }; 
             context.Lessons.Add(lesson); 

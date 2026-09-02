@@ -31,6 +31,10 @@ else
                 @slides[currentSlideIndex].BodyText
             </p>
 
+            <img src="/api/lessons/@lesson.Id/image"
+            alt="@lesson.Title"
+            style="width:100%; max-width:600px; aspect-ratio:16/9; object-fit:cover; border-radius:8px; margin-bottom:20px;" />
+
             <div style="margin-top:24px; display:flex; gap:12px;">
                 <button @onclick="GoBack" disabled="@(currentSlideIndex == 0)">Back</button>
 

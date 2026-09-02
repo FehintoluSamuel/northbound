@@ -11,6 +11,7 @@ namespace NorthboundSessions.Data
          public int Id { get; set; } 
          public required string Title { get; set; } 
          public required string OutlineContent { get; set; } 
+         public byte[]? ImageBytes { get; set; }
          public string? MarketSymbol { get; set; } 
          public bool IsUsed { get; set; } = false; 
          public ICollection<BankQuestion> Questions { get; set; } = new List<BankQuestion>(); 

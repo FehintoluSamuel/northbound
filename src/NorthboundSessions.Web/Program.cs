@@ -127,6 +127,17 @@ app.MapGet("/", async context =>
         Path.Combine(app.Environment.WebRootPath, "index.html"));
 
 });
+app.MapGet("/api/lessons/{id}/image", 
+async (
+    int id, IDbContextFactory<ApplicationDbContext> dbFactory
+    ) => { 
+        await using var context = await dbFactory.CreateDbContextAsync(); 
+        var lesson = await context.Lessons.FindAsync(id); 
+        if (lesson?.ImageBytes is null) 
+        { 
+            return Results.Redirect("/images/lessons/continue_learning_default.jpg"); 
+        } 
+        return Results.File(lesson.ImageBytes, "image/jpeg"); });
 
 app.MapRazorComponents<App>()
 

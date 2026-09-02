@@ -22,6 +22,14 @@
     <label>Market Symbol (optional, e.g. NYSE:NKE)</label>
     <InputText @bind-Value="newTopic.MarketSymbol" />
 
+    <label>Lesson image (optional, 16:9 works best, e.g. 800×450)</label>
+    <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg" />
+
+    @if (imagePreviewUrl is not null)
+    {
+        <img src="@imagePreviewUrl" style="max-width:300px; display:block; margin-top:10px;" />
+    }
+
     <hr />
     <h4>Quiz Questions</h4>
 
@@ -44,6 +52,7 @@
             <button type="button" @onclick="() => AddOption(question)">+ Add option</button>
         </div>
     }
+    
     <button type="button" @onclick="AddQuestion">+ Add question</button>
 
     <hr />
@@ -77,5 +86,18 @@
         context.TopicBankItems.Add(newTopic);
         await context.SaveChangesAsync();
         Nav.NavigateTo("/admin/topics/create");
+    }
+
+    private string? imagePreviewUrl;
+
+    private async Task HandleImageSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024); // 5MB cap
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+
+        newTopic.ImageBytes = memoryStream.ToArray();
+        imagePreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(newTopic.ImageBytes)}";
     }
 }
