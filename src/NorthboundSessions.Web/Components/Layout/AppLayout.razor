@@ -1,18 +1,12 @@
-﻿@* AppLayout.razor
-   Shared layout for all student-facing pages (Dashboard, Lessons, Quizzes,
-   Sessions, Progress). Auth pages use AuthLayout instead — see backend
-   handoff. Admin pages will get their own AdminLayout with sidebar nav.
-
-   Requires InteractiveServer render mode for the notification/avatar
-   interactions below. Apply it on the routable page, e.g.:
-     @attribute [RenderModeInteractiveServer]
-   or globally in Routes.razor — not hardcoded here, since layouts
-   themselves don't own render mode in .NET 8 Blazor Web Apps.
-*@
+﻿@* AppLayout.razor — shared shell for student-facing pages
+   (Dashboard, Lessons, Quizzes, Sessions, Progress).
+   Requires InteractiveServer render mode on the HOSTING PAGE
+   (e.g. @rendermode InteractiveServer in Dashboard.razor) —
+   do NOT set it globally on <Routes /> in App.razor, since that
+   breaks Identity's Login/Register pages. *@
 @inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JS
-
 
 <div class="app-shell">
 
@@ -20,12 +14,11 @@
         <div class="topnav-inner">
 
             <a href="/dashboard" class="brand">
-                <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 26 26" fill="none" aria-hidden="true">
                     <circle cx="13" cy="13" r="11.5" stroke="#fff" stroke-width="1.6" />
                     <path d="M13 5.5L15.5 13L13 20.5L10.5 13L13 5.5Z" fill="#fff" />
                     <circle cx="13" cy="13" r="1.6" fill="#16A34A" />
                 </svg>
-                <span>Northbound Sessions</span>
             </a>
 
             <nav class="nav-links" aria-label="Primary">
@@ -52,6 +45,7 @@
                         </svg>
                     }
                 </button>
+
                 <button class="icon-btn" @onclick="DismissNotifications"
                         aria-label="Notifications" aria-pressed="@(!HasUnread)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true">
@@ -81,48 +75,17 @@
         @Body
     </main>
 
-    <nav class="tabbar" aria-label="Primary">
-        <NavLink class="tab" href="/dashboard" Match="NavLinkMatch.All">
-            <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
-                <path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" />
-            </svg>
-            Dashboard
-        </NavLink>
-        <NavLink class="tab" href="/lessons">
-            <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
-                <path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
-            </svg>
-            Lessons
-        </NavLink>
-        <NavLink class="tab" href="/quizzes">
-            <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
-                <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-            </svg>
-            Quizzes
-        </NavLink>
-        <NavLink class="tab" href="/sessions">
-            <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" />
-            </svg>
-            Sessions
-        </NavLink>
-        <NavLink class="tab" href="/progress">
-            <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
-                <path d="M3 3v18h18" /><path d="M7 15l4-6 4 4 5-8" />
-            </svg>
-            Progress
-        </NavLink>
-    </nav>
+    <NavMenu />
 
 </div>
 
 @code {
     private bool HasUnread { get; set; } = true;
+    private bool IsDark { get; set; }
     private string DisplayName { get; set; } = string.Empty;
     private string Initials { get; set; } = "?";
 
-    // Placeholder completion value until this is wired to a real
-    // "overall program completion" query. 0-100.
+    // Placeholder until this is wired to a real "overall completion" query.
     private int CompletionPercent { get; set; } = 70;
     private double RingOffset => 100.5 - (100.5 * CompletionPercent / 100.0);
 
@@ -131,9 +94,7 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        // Identity.Name is the user's email — there's no display-name field
-        // yet (see backend handoff, section 3). Deriving something readable
-        // from the local-part until a real field exists.
+        // Identity.Name is the user's email — no display-name field exists yet.
         var email = user.Identity?.Name ?? string.Empty;
         DisplayName = email;
 
@@ -142,9 +103,6 @@
             ? localPart[..2].ToUpperInvariant()
             : localPart.ToUpperInvariant().PadRight(2, '?');
     }
-
-
-    private bool IsDark { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -165,7 +123,6 @@
     private void DismissNotifications()
     {
         HasUnread = false;
-        // TODO: replace with a real call once notifications have a backend
-        // model — nothing in the current schema tracks these yet.
+        // TODO: no notifications table exists yet — this is local-only state.
     }
 }

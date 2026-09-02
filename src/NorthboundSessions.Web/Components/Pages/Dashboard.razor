@@ -1,50 +1,275 @@
 @page "/dashboard"
+@rendermode InteractiveServer
 @layout AppLayout
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Data
 @using Microsoft.AspNetCore.Authorization
 @using NorthboundSessions.Web.Data
 @using NorthboundSessions.Data
 @attribute [Authorize]
-@rendermode InteractiveServer
-@using Microsoft.EntityFrameworkCore
-@inject IDbContextFactory<ApplicationDbContext> DbFactory
 
-<h1 class="brand-heading">Welcome back</h1>
-
-@if (nextLesson is not null)
-{
-    <div class="dashboard-card">
-        <h3>Today's lesson</h3>
-        <p>@nextLesson.Title</p>
-        <a href="/lessons/@nextLesson.Id">View lesson</a>
+<div class="hero">
+    <img class="hero-img" src="images/hero-banner.jpg" alt="" />
+    <div class="hero-overlay">
+        <div class="hero-eyebrow">Today's focus</div>
+        <h1>Good morning, @DisplayFirstName.</h1>
+        @if (NextLesson is not null)
+        {
+            <p>@NextLesson.Title is up next@(NextLesson.MarketSymbol is not null ? $" — covers {NextLesson.MarketSymbol}" : "").</p>
+            <a class="hero-cta" href="@($"/lessons/{NextLesson.Id}")">
+                Continue today's lesson
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2.6"><path d="M9 6l6 6-6 6" /></svg>
+            </a>
+        }
+        else
+        {
+            <p>No lesson has been released yet — check back soon.</p>
+        }
     </div>
-}
+</div>
 
-@if (nextSession is not null)
-{
-    <div class="dashboard-card">
-        <h3>Next live session</h3>
-        <p>@nextSession.Topic — @nextSession.ScheduledAt.ToLocalTime().ToString("f")</p>
-        <a href="@nextSession.MeetLink" target="_blank">Join Meet</a>
+<div class="container">
+
+    <!-- Streak -->
+    <div class="streak-row">
+        <div class="streak-left">
+            <div class="flame-icon @(CurrentStreak > 0 ? "lit" : "")">
+                <svg width="22" height="22" viewBox="0 0 24 24" stroke-width="2">
+                    <path d="M12 4c.8 3-2.6 4-2.6 7.2a2.8 2.8 0 0 0 5.6 0c0-1-.6-1.7-.6-2.6 1.3.7 2 2 2 3.4a4.4 4.4 0 0 1-8.8 0c0-3.6 2.2-4.4 4.4-8Z" />
+                </svg>
+            </div>
+            <div>
+                <div class="streak-num text-stat">@CurrentStreak day streak</div>
+                <div class="text-small">Based on quiz attempts and session check-ins</div>
+            </div>
+        </div>
+        <div class="text-small">Longest streak: @LongestStreak days</div>
     </div>
-}
+
+    <!-- Continue learning -->
+    @if (NextLesson is not null)
+    {
+        <section class="section">
+            <div class="section-head"><h2>Continue learning</h2></div>
+            <div class="lesson-card">
+                <img class="lesson-thumb" src="@($"images/lessons/{NextLesson.Id}.jpg")"
+                     onerror="this.onerror=null;this.src='images/lessons/default.jpg';" alt="" />
+                <div class="lesson-body">
+                    <h3 class="text-h3">@NextLesson.Title</h3>
+                    <div class="progress-meta text-small">
+                        Released @NextLesson.ReleaseDate.ToString("MMM d")
+                        @(NextLesson.IsLiveDay ? " · live session day" : "")
+                    </div>
+                    <a class="resume-btn" href="@($"/lessons/{NextLesson.Id}")">View lesson</a>
+                </div>
+            </div>
+        </section>
+    }
+
+    <!-- Next live session -->
+    @if (NextSession is not null)
+    {
+        <section class="section">
+            <div class="section-head"><h2>Next live session</h2></div>
+            <div class="session-card">
+                <img class="session-photo" src="images/instructors/default.jpg" alt="" />
+                <div class="session-body">
+                    <h3 class="text-h3">@NextSession.Topic</h3>
+                    <p class="text-small">@NextSession.ScheduledAt.ToString("ddd, MMM d · h:mm tt")</p>
+                </div>
+                <a class="join-btn" href="@($"/sessions/{NextSession.Id}/checkin")">Check in</a>
+            </div>
+        </section>
+    }
+
+    <!-- Achievements -->
+    <section class="section">
+        <div class="section-head"><h2>Achievements</h2></div>
+        <div class="badge-grid">
+            @foreach (var badge in Achievements)
+            {
+                <div class="badge @(badge.Unlocked ? "unlocked" : "")" title="@badge.Description">
+                    <div class="badge-circle">
+                        @((MarkupString)badge.IconSvg)
+                    </div>
+                    <div class="badge-name text-micro">@badge.Name</div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- This week -->
+    <section class="section">
+        <div class="section-head"><h2>This week</h2></div>
+        <div class="metric-row">
+            <div class="metric"><div class="metric-num text-stat">@LessonsCompletedCount</div><div class="text-small">Lessons completed</div></div>
+            <div class="metric"><div class="metric-num text-stat">@(AverageQuizScore is null ? "—" : $"{AverageQuizScore:0}%")</div><div class="text-small">Average quiz score</div></div>
+            <div class="metric"><div class="metric-num text-stat">@SessionsAttendedCount</div><div class="text-small">Sessions attended</div></div>
+        </div>
+    </section>
+
+    <!-- Recent activity -->
+    <section class="section">
+        <div class="section-head"><h2>Recent activity</h2></div>
+        @if (RecentActivity.Count == 0)
+        {
+            <p class="text-small">No activity yet — quiz attempts and session check-ins will show up here.</p>
+        }
+        else
+        {
+            <div class="activity">
+                @foreach (var item in RecentActivity)
+                {
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" /></svg>
+                        </div>
+                        <div class="activity-text text-body">@item.Description</div>
+                        <div class="activity-time text-small">@item.When.ToString("MMM d")</div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+</div>
 
 @code {
-    private Lesson? nextLesson;
-    private LiveSession? nextSession;
+    private Lesson? NextLesson;
+    private LiveSession? NextSession;
+    private int LessonsCompletedCount;
+    private double? AverageQuizScore;
+    private int SessionsAttendedCount;
+    private int CurrentStreak;
+    private int LongestStreak;
+    private string DisplayFirstName = "there";
+    private string _studentId = string.Empty;
+
+    private List<ActivityItem> RecentActivity = new();
+    private List<Achievement> Achievements = new();
+
+    private record ActivityItem(string Description, DateTime When);
+    private record Achievement(string Name, string Description, string IconSvg, bool Unlocked);
+
+    private const string IconMedal = "<svg viewBox=\"0 0 24 24\" stroke-width=\"2\" fill=\"none\"><path d=\"M8 4h8v3a4 4 0 0 1-8 0V4Z\"/><path d=\"M6 5H4a2 2 0 0 0 2 4\"/><path d=\"M18 5h2a2 2 0 0 1-2 4\"/><path d=\"M10 11v3M14 11v3\"/><path d=\"M9 20h6M12 14v3\"/></svg>";
+    private const string IconFlame = "<svg viewBox=\"0 0 24 24\" stroke-width=\"2\" fill=\"none\"><path d=\"M12 4c.8 3-2.6 4-2.6 7.2a2.8 2.8 0 0 0 5.6 0c0-1-.6-1.7-.6-2.6 1.3.7 2 2 2 3.4a4.4 4.4 0 0 1-8.8 0c0-3.6 2.2-4.4 4.4-8Z\"/></svg>";
+    private const string IconTarget = "<svg viewBox=\"0 0 24 24\" stroke-width=\"2\" fill=\"none\"><circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"4.5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/></svg>";
+    private const string IconStack = "<svg viewBox=\"0 0 24 24\" stroke-width=\"2\" fill=\"none\"><rect x=\"4\" y=\"14\" width=\"16\" height=\"4\" rx=\"1\"/><rect x=\"5.5\" y=\"10\" width=\"13\" height=\"4\" rx=\"1\"/><rect x=\"7\" y=\"6\" width=\"10\" height=\"4\" rx=\"1\"/></svg>";
+    private const string IconSunrise = "<svg viewBox=\"0 0 24 24\" stroke-width=\"2\" fill=\"none\"><path d=\"M12 3v4\"/><path d=\"M5 12H3M21 12h-2\"/><path d=\"m6 6 1.5 1.5M16.5 7.5 18 6\"/><path d=\"M4 17h16\"/><path d=\"M6.5 17a5.5 5.5 0 0 1 11 0\"/></svg>";
 
     protected override async Task OnInitializedAsync()
     {
-        await using var context = await DbFactory.CreateDbContextAsync();
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _studentId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
-        nextLesson = await context.Lessons
-            .Where(l => l.ReleaseDate <= today)
+        var email = user.Identity?.Name ?? string.Empty;
+        if (email.Contains('@'))
+        {
+            DisplayFirstName = email[..email.IndexOf('@')];
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        NextLesson = await db.Lessons
+            .Where(l => l.ReleaseDate <= DateOnly.FromDateTime(DateTime.UtcNow))
             .OrderByDescending(l => l.ReleaseDate)
             .FirstOrDefaultAsync();
 
-        nextSession = await context.LiveSessions
-            .Where(s => s.ScheduledAt >= DateTimeOffset.UtcNow)
+        NextSession = await db.LiveSessions
+            .Where(s => s.ScheduledAt >= DateTime.UtcNow)
             .OrderBy(s => s.ScheduledAt)
             .FirstOrDefaultAsync();
+
+        if (string.IsNullOrEmpty(_studentId))
+        {
+            Achievements = BuildAchievements(attemptCount: 0, perfectScore: false, streak: 0, lessonsCompleted: 0, earlyBird: false);
+            return;
+        }
+
+        var attempts = await db.QuizAttempts
+            .Where(a => a.StudentId == _studentId)
+            .ToListAsync();
+
+        var attendances = await db.Attendances
+            .Where(a => a.StudentId == _studentId)
+            .ToListAsync();
+
+        LessonsCompletedCount = attempts.Select(a => a.QuizId).Distinct().Count();
+        AverageQuizScore = attempts.Count > 0 ? attempts.Average(a => a.Score) : null;
+        SessionsAttendedCount = attendances.Count;
+
+        var activityDates = attempts.Select(a => a.SubmittedAt.Date)
+            .Concat(attendances.Select(a => a.CheckedInAt.Date))
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToList();
+
+        (CurrentStreak, LongestStreak) = ComputeStreaks(activityDates);
+
+        var earlyBird = attempts.Any(a => a.SubmittedAt.Hour < 8);
+        var perfectScore = attempts.Any(a => a.Score >= 100);
+
+        Achievements = BuildAchievements(attempts.Count, perfectScore, CurrentStreak, LessonsCompletedCount, earlyBird);
+
+        // SubmittedAt / CheckedInAt are DateTimeOffset; convert with .DateTime
+        // when constructing ActivityItem (which expects DateTime):
+        var quizActivity = attempts
+            .OrderByDescending(a => a.SubmittedAt)
+            .Take(3)
+            .Select(a => new ActivityItem($"Scored {a.Score}% on a quiz", a.SubmittedAt.DateTime));
+
+        var attendanceActivity = attendances
+            .OrderByDescending(a => a.CheckedInAt)
+            .Take(3)
+            .Select(a => new ActivityItem("Checked in to a live session", a.CheckedInAt.DateTime));
+
+        RecentActivity = quizActivity.Concat(attendanceActivity)
+            .OrderByDescending(a => a.When)
+            .Take(5)
+            .ToList();
     }
+
+    private static (int current, int longest) ComputeStreaks(List<DateTime> datesDescending)
+    {
+        if (datesDescending.Count == 0) return (0, 0);
+
+        var cursor = DateTime.UtcNow.Date;
+        if (!datesDescending.Contains(cursor)) cursor = cursor.AddDays(-1);
+
+        var current = 0;
+        while (datesDescending.Contains(cursor))
+        {
+            current++;
+            cursor = cursor.AddDays(-1);
+        }
+
+        var longest = 1;
+        var run = 1;
+        for (int i = 1; i < datesDescending.Count; i++)
+        {
+            if (datesDescending[i - 1].AddDays(-1) == datesDescending[i])
+            {
+                run++;
+                longest = Math.Max(longest, run);
+            }
+            else
+            {
+                run = 1;
+            }
+        }
+
+        return (current, longest);
+    }
+
+    private List<Achievement> BuildAchievements(int attemptCount, bool perfectScore, int streak, int lessonsCompleted, bool earlyBird) => new()
+    {
+        new("First Quiz", "Complete your first quiz", IconMedal, attemptCount >= 1),
+        new("5-Day Streak", "Stay active 5 days in a row", IconFlame, streak >= 5),
+        new("Perfect Score", "Score 100% on a quiz", IconTarget, perfectScore),
+        new("5 Lessons", "Complete quizzes for 5 lessons", IconStack, lessonsCompleted >= 5),
+        new("Early Bird", "Submit a quiz before 8 AM", IconSunrise, earlyBird),
+    };
 }

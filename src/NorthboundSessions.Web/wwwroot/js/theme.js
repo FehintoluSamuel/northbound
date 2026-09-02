@@ -1,5 +1,4 @@
-// Applies theme before Blazor paints anything, to avoid a flash of the
-// wrong theme. Persisted in localStorage; falls back to OS preference.
+// theme.js — dark/light mode, defaults to light unless the user toggled before.
 window.themeInterop = {
     getTheme: function () {
         return localStorage.getItem('theme') || 'light';

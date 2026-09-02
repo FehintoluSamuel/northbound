@@ -1,92 +1,37 @@
-﻿@implements IDisposable
+﻿@* NavMenu.razor — bottom tab bar for student-facing pages.
+   Referenced from AppLayout.razor as <NavMenu /> instead of being
+   embedded inline, since this component's scoped CSS is already
+   proven to build correctly (it ships with the default template). *@
 
-@inject NavigationManager NavigationManager
-
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">NorthboundSessions.Web</a>
-    </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
-            </NavLink>
-        </div>
-
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
-                    </form>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </nav>
-</div>
-
-@code {
-    private string? currentUrl;
-
-    protected override void OnInitialized()
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.LocationChanged += OnLocationChanged;
-    }
-
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        NavigationManager.LocationChanged -= OnLocationChanged;
-    }
-}
-
+<nav class="tabbar" aria-label="Primary">
+    <NavLink class="tab" href="/dashboard" Match="NavLinkMatch.All">
+        <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
+            <path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" />
+        </svg>
+        <span>Dashboard</span>
+    </NavLink>
+    <NavLink class="tab" href="/lessons">
+        <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
+            <path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+        </svg>
+        <span>Lessons</span>
+    </NavLink>
+    <NavLink class="tab" href="/quizzes">
+        <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
+            <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+        <span>Quizzes</span>
+    </NavLink>
+    <NavLink class="tab" href="/sessions">
+        <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" />
+        </svg>
+        <span>Sessions</span>
+    </NavLink>
+    <NavLink class="tab" href="/progress">
+        <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
+            <path d="M3 3v18h18" /><path d="M7 15l4-6 4 4 5-8" />
+        </svg>
+        <span>Progress</span>
+    </NavLink>
+</nav>
