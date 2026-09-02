@@ -3,7 +3,7 @@
    `a { color }` rule regardless of stylesheet load order. */
 
    .app-shell {
-    min-height: 100vh;
+    min-height: 30vh;
     display: flex;
     flex-direction: column;
 }
