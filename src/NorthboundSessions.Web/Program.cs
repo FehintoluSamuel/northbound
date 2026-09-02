@@ -59,6 +59,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddScoped<QuizService>();
 builder.Services.AddScoped<AttendanceService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<ReportingService>();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {

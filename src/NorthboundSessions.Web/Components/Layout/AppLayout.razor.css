@@ -1,37 +1,201 @@
-.app-shell { display: flex; flex-direction: column; min-height: 100vh; }
+/* AppLayout.razor.css
+   Blazor CSS isolation — scoped to AppLayout's own markup only.
+   Design tokens (--navy, --spark, etc.) live in wwwroot/css/site-theme.css
+   so they cascade to page-level components inside @Body as well.
+*/
 
-.app-topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 40px; background: #fff; border-bottom: 1px solid var(--line, #E1E3E8);
-}
-.app-avatar {
-  width: 34px; height: 34px; border-radius: 50%; background: #EAEEF6;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 600; color: var(--navy, #1F2A44);
-}
-
-.app-content {
-  flex: 1; padding: 32px 40px 100px;
-  max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box;
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.app-bottombar {
-  position: sticky; bottom: 0;
-  display: flex; justify-content: center; gap: 48px;
-  padding: 14px 0; background: #fff; border-top: 1px solid var(--line, #E1E3E8);
+/* ---------- Top nav ---------- */
+.topnav {
+  background: var(--navy);
+  padding: 14px 0;
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
-.app-tab {
-  display: flex; flex-direction: row; align-items: center; gap: 8px;
-  text-decoration: none; color: var(--slate, #6B7280); font-size: 13.5px; font-weight: 500;
-}
-.app-tab i { font-size: 18px; }
-.app-tab:hover { color: var(--navy, #1F2A44); }
-.app-tab.active { color: var(--navy, #1F2A44); }
 
-/* Below this width only, compress into the compact mobile tab-bar style */
-@media (max-width: 640px) {
-  .app-topbar { padding: 12px 16px; }
-  .app-content { padding: 20px 16px 90px; }
-  .app-bottombar { justify-content: space-around; gap: 0; padding: 8px 0; }
-  .app-tab { flex-direction: column; gap: 3px; font-size: 11px; }
+.topnav-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+}
+
+.brand span {
+  color: #fff;
+  font-family: 'Source Serif 4', serif;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.nav-links {
+  display: none;
+  gap: 28px;
+}
+
+.nav-links a {
+  color: #C9D2FF;
+  font-family: 'Inter', sans-serif;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 6px 2px;
+  border-bottom: 2px solid transparent;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.nav-links a:hover {
+  color: #fff;
+}
+
+.nav-links a.active {
+  color: #fff;
+  border-color: var(--spark);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  position: relative;
+}
+
+.icon-btn svg {
+  stroke: #fff;
+}
+
+.bell-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--spark);
+  border: 1.5px solid var(--navy);
+}
+
+.avatar-ring {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  stroke: rgba(255, 255, 255, .25);
+}
+
+.ring-progress {
+  stroke: var(--spark);
+  transition: stroke-dashoffset .8s cubic-bezier(.22, 1, .36, 1);
+}
+
+.avatar-fill {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--offwhite);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+/* ---------- Main content area ---------- */
+.app-main {
+  flex: 1;
+  padding-bottom: 24px;
+}
+
+/* ---------- Bottom tab bar (mobile only, per brand nav spec) ---------- */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-around;
+  padding: 9px 4px calc(9px + env(safe-area-inset-bottom));
+  z-index: 30;
+}
+
+nav.tabbar .tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted);
+  font-family: 'Inter', sans-serif;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: .1px;
+  text-decoration: none;
+}
+
+nav.tabbar .tab svg {
+  width: 21px;
+  height: 21px;
+  stroke: var(--muted);
+  fill: none;
+  transition: stroke .15s ease;
+}
+
+nav.tabbar .tab.active {
+  color: var(--navy);
+}
+
+nav.tabbar .tab.active svg {
+  stroke: var(--navy);
+}
+
+/* ---------- Responsive ---------- */
+@media (min-width: 900px) {
+  .nav-links {
+    display: flex;
+  }
+
+  .tabbar {
+    display: none;
+  }
+
+  .app-main {
+    padding-bottom: 0;
+  }
 }
