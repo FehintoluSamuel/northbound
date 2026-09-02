@@ -54,8 +54,8 @@
         <section class="section">
             <div class="section-head"><h2>Continue learning</h2></div>
             <div class="lesson-card">
-                <img class="lesson-thumb" src="@($"images/lessons/{NextLesson.Id}.jpg")"
-                     onerror="this.onerror=null;this.src='images/lessons/default.jpg';" alt="" />
+                <img class="lesson-thumb" src="@($"/images/lessons/{NextLesson.Id}.jpg")"
+                     onerror="this.onerror=null;this.src='/images/lessons/default.jpg';" alt="" />
                 <div class="lesson-body">
                     <h3 class="text-h3">@NextLesson.Title</h3>
                     <div class="progress-meta text-small">
@@ -74,7 +74,7 @@
         <section class="section">
             <div class="section-head"><h2>Next live session</h2></div>
             <div class="session-card">
-                <img class="session-photo" src="images/instructors/default.jpg" alt="" />
+                <img class="session-photo" src="/images/instructors/default.jpg" alt="" />
                 <div class="session-body">
                     <h3 class="text-h3">@NextSession.Topic</h3>
                     <p class="text-small">@NextSession.ScheduledAt.ToString("ddd, MMM d · h:mm tt")</p>

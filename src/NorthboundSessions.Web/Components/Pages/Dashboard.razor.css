@@ -1,12 +1,12 @@
 /* Dashboard.razor.css — scoped, uses tokens from site-theme.css */
 
-::deep .hero {
+.hero {
     position: relative;
     height: 300px;
     overflow: hidden;
 }
 
-::deep .hero-img {
+.hero-img {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -14,7 +14,7 @@
     object-fit: cover;
 }
 
-::deep .hero-overlay {
+.hero-overlay {
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg, rgba(36, 56, 150, .12) 0%, rgba(20, 26, 66, .94) 100%);
@@ -24,7 +24,7 @@
     padding: 28px 20px;
 }
 
-::deep .hero-eyebrow {
+.hero-eyebrow {
     color: #C9D2FF;
     font-size: var(--fs-micro);
     font-weight: 600;
@@ -32,7 +32,7 @@
     margin-bottom: 6px;
 }
 
-::deep .hero h1 {
+.hero h1 {
     color: #fff;
     font-size: var(--fs-display);
     line-height: 1.15;
@@ -40,15 +40,14 @@
     margin-bottom: 10px;
 }
 
-::deep .hero p {
+.hero p {
     color: #E7DEFB;
     font-size: var(--fs-body-lg);
     line-height: 1.6;
     margin: 0 0 18px;
     max-width: 440px;
 }
-
-::deep .hero-cta {
+.hero-cta {
     display: inline-flex;
     align-items: center;
     gap: 8px;
