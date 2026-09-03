@@ -1,0 +1,226 @@
+@page "/lessons/{LessonId:int}"
+@rendermode InteractiveServer
+@layout AppLayout
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject LessonProgressService ProgressService
+@inject SlideService SlideService
+@inject IJSRuntime JS
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@using NorthboundSessions.Web.Data
+@using NorthboundSessions.Web.Services
+@using NorthboundSessions.Data
+@attribute [Authorize]
+
+
+
+
+@if (LessonNotFound)
+{
+    <div class="container"><p class="text-body">This lesson doesn't exist.</p></div>
+}
+else if (CurrentLesson is not null)
+{
+    <div class="back-row">
+        <a class="back-link" href="/lessons">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6" /></svg>
+            Lessons
+        </a>
+    </div>
+
+    <div class="container">
+        <div class="lesson-header">
+            <div class="lesson-eyebrow">
+                <span>Released @CurrentLesson.ReleaseDate.ToString("MMM d")</span>
+                @if (CurrentLesson.IsLiveDay)
+                {
+                    <span class="live-badge">Live session day</span>
+                }
+            </div>
+            <h1>@CurrentLesson.Title</h1>
+            @if (CurrentLesson.MarketSymbol is not null)
+            {
+                <div class="symbol-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l5-5 4 4 8-8" /><path d="M14 8h6v6" /></svg>
+                    @CurrentLesson.MarketSymbol
+                </div>
+            }
+        </div>
+
+
+        <!-- Market chart -->
+        @if (CurrentLesson.MarketSymbol is not null)
+        {
+            <section class="section">
+                <h2>Market chart</h2>
+                <div id="tv-chart" class="chart-card"></div>
+            </section>
+        }
+
+                <!-- Slide viewer -->
+        <section class="section" style="padding-top:0;">
+            <div class="slide-card">
+                <div class="slide-viewport">
+                    <p>@Slides[CurrentSlideIndex]</p>
+                </div>
+                <div class="slide-controls">
+                    <button class="slide-nav-btn" disabled="@(CurrentSlideIndex == 0)" @onclick="GoPrevious">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M15 18l-6-6 6-6" /></svg>
+                    </button>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="slide-dots">
+                            @for (int i = 0; i < Slides.Count; i++)
+                            {
+                                var idx = i;
+                                <div class="slide-dot @(idx == CurrentSlideIndex ? "active" : "")"></div>
+                            }
+                        </div>
+                        <span class="slide-count">@(CurrentSlideIndex + 1) / @Slides.Count</span>
+                    </div>
+                    <button class="slide-nav-btn" disabled="@(CurrentSlideIndex == Slides.Count - 1)" @onclick="GoNext">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M9 6l6 6-6 6" /></svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Materials -->
+        <section class="section">
+            <h2>Materials</h2>
+            <div class="materials-note">
+                Downloadable slides and handouts aren't available yet — this lesson's content renders in-app above.
+            </div>
+        </section>
+
+        <!-- Actions -->
+        <section class="section" style="padding-bottom:20px;">
+            <div class="action-row">
+                @if (QuizId is not null)
+                {
+                    <button class="btn-primary" disabled="@(!QuizUnlocked)" @onclick="GoToQuiz">
+                        Take the quiz
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6" /></svg>
+                    </button>
+                    @if (!QuizUnlocked)
+                    {
+                        <div class="quiz-hint">Finish all @Slides.Count slides to unlock the quiz</div>
+                    }
+                }
+
+                @if (CurrentLesson.IsLiveDay && NextSessionId is not null)
+                {
+                    <button class="btn-secondary" @onclick="GoToCheckIn">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+                        Join today's live session
+                    </button>
+                }
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public int LessonId { get; set; }
+
+    private Lesson? CurrentLesson;
+    private bool LessonNotFound;
+    private List<string> Slides = new();
+    private int CurrentSlideIndex;
+    private int FurthestSlideReached;
+    private int? QuizId;
+    private int? NextSessionId;
+    private string _studentId = string.Empty;
+    private bool _chartRendered;
+
+    private bool QuizUnlocked => FurthestSlideReached >= Slides.Count - 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        CurrentLesson = await db.Lessons.FindAsync(LessonId);
+        if (CurrentLesson is null)
+        {
+            LessonNotFound = true;
+            return;
+        }
+
+        Slides = SlideService.GenerateSlides(CurrentLesson).Select(s => s.BodyText).ToList();
+        if (Slides.Count == 0) Slides.Add(CurrentLesson.OutlineContent ?? string.Empty);
+
+        QuizId = await db.Quizzes
+            .Where(q => q.LessonId == CurrentLesson.Id)
+            .Select(q => (int?)q.Id)
+            .FirstOrDefaultAsync();
+
+        if (CurrentLesson.IsLiveDay)
+        {
+            NextSessionId = await db.LiveSessions
+                .Where(s => s.ScheduledAt >= DateTime.UtcNow)
+                .OrderBy(s => s.ScheduledAt)
+                .Select(s => (int?)s.Id)
+                .FirstOrDefaultAsync();
+        }
+
+        if (!string.IsNullOrEmpty(_studentId))
+        {
+            FurthestSlideReached = await ProgressService.GetFurthestSlideAsync(_studentId, LessonId);
+            // Resume where they left off, but never past the last slide
+            // (in case slide count changed since they last visited).
+            CurrentSlideIndex = Math.Min(FurthestSlideReached, Slides.Count - 1);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (CurrentLesson?.MarketSymbol is not null && !_chartRendered)
+        {
+            _chartRendered = true;
+            await JS.InvokeVoidAsync("initTradingViewWidget", "tv-chart", CurrentLesson.MarketSymbol);
+        }
+    }
+
+    private async Task GoNext()
+    {
+        if (CurrentSlideIndex < Slides.Count - 1)
+        {
+            CurrentSlideIndex++;
+            if (CurrentSlideIndex > FurthestSlideReached)
+            {
+                FurthestSlideReached = CurrentSlideIndex;
+                if (!string.IsNullOrEmpty(_studentId))
+                {
+                    await ProgressService.RecordProgressAsync(_studentId, LessonId, FurthestSlideReached);
+                }
+            }
+        }
+    }
+
+    private void GoPrevious()
+    {
+        if (CurrentSlideIndex > 0) CurrentSlideIndex--;
+    }
+
+    private void GoToQuiz()
+    {
+        if (QuizId is not null)
+        {
+            // NavigationManager.NavigateTo($"/quizzes/{QuizId}/take");
+            // TODO: inject NavigationManager once wiring this up for real.
+        }
+    }
+
+    private void GoToCheckIn()
+    {
+        if (NextSessionId is not null)
+        {
+            // NavigationManager.NavigateTo($"/sessions/{NextSessionId}/checkin");
+            // TODO: inject NavigationManager once wiring this up for real.
+        }
+    }
+}

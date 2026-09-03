@@ -13,7 +13,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<LiveSession> LiveSessions {get; set;}
     public DbSet<Attendance> Attendances {get; set;}
     public DbSet<Lesson> Lessons {get; set;}
+    public DbSet<LessonProgress> LessonProgresses { get; set; }
     public DbSet<TopicBankItem> TopicBankItems { get; set; } 
     public DbSet<BankQuestion> BankQuestions { get; set; } 
     public DbSet<BankOption> BankOptions { get; set; }
+    
 }
