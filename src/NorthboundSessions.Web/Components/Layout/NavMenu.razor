@@ -1,37 +1,31 @@
-﻿@* NavMenu.razor — bottom tab bar for student-facing pages.
-   Referenced from AppLayout.razor as <NavMenu /> instead of being
-   embedded inline, since this component's scoped CSS is already
-   proven to build correctly (it ships with the default template). *@
+﻿@* NavMenu.razor — bottom tab bar, icon-only.
+   aria-label carries the name for screen readers since visible
+   text labels are intentionally removed. *@
 
 <nav class="tabbar" aria-label="Primary">
-    <NavLink class="tab" href="/dashboard" Match="NavLinkMatch.All">
+    <NavLink class="tab" href="/dashboard" Match="NavLinkMatch.All" aria-label="Dashboard" title="Dashboard">
         <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
             <path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" />
         </svg>
-        <span>Dashboard</span>
     </NavLink>
-    <NavLink class="tab" href="/lessons">
+    <NavLink class="tab" href="/lessons" aria-label="Lessons" title="Lessons">
         <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
             <path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
         </svg>
-        <span>Lessons</span>
     </NavLink>
-    <NavLink class="tab" href="/quizzes">
+    <NavLink class="tab" href="/quizzes" aria-label="Quizzes" title="Quizzes">
         <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
             <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
         </svg>
-        <span>Quizzes</span>
     </NavLink>
-    <NavLink class="tab" href="/sessions">
+    <NavLink class="tab" href="/sessions" aria-label="Sessions" title="Sessions">
         <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" />
         </svg>
-        <span>Sessions</span>
     </NavLink>
-    <NavLink class="tab" href="/progress">
+    <NavLink class="tab" href="/progress" aria-label="Progress" title="Progress">
         <svg viewBox="0 0 24 24" stroke-width="2" fill="none" aria-hidden="true">
             <path d="M3 3v18h18" /><path d="M7 15l4-6 4 4 5-8" />
         </svg>
-        <span>Progress</span>
     </NavLink>
 </nav>

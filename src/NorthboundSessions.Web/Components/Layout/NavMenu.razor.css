@@ -1,7 +1,6 @@
-/* NavMenu.razor.css — bottom tab bar, fixed and visible on every
-   screen size (mobile and desktop alike, per locked design). */
+/* NavMenu.razor.css — icon-only bottom tab bar. */
 
-   .tabbar {
+.tabbar {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -10,63 +9,37 @@
     background: var(--white);
     border-top: 1px solid var(--line);
     display: flex;
-    justify-content: space-between;
-    align-items: stretch;
-    padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 4px calc(10px + env(safe-area-inset-bottom));
     z-index: 30;
     box-sizing: border-box;
-    overflow: hidden;
 }
 
 nav.tabbar a.tab {
     flex: 1 1 0;
-    min-width: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    padding: 8px;
+    border-radius: 10px;
     color: var(--muted);
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    text-decoration: none;
-    padding: 4px 2px;
-    box-sizing: border-box;
+    transition: color .15s ease, background .15s ease;
 }
 
 nav.tabbar a.tab svg {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
     stroke: var(--muted);
     fill: none;
     transition: stroke .15s ease;
 }
 
-nav.tabbar a.tab span {
-    font-size: 10.5px;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-}
-
 nav.tabbar a.tab.active {
     color: var(--navy);
+    background: var(--offwhite);
 }
 
 nav.tabbar a.tab.active svg {
     stroke: var(--navy);
-}
-
-@media (max-width: 360px) {
-    nav.tabbar a.tab svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    nav.tabbar a.tab span {
-        font-size: 9.5px;
-    }
 }

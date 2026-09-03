@@ -69,25 +69,31 @@
     }
 
     <!-- Next live session -->
-    @if (NextSession is not null)
-    {
-        <section class="section">
-            <div class="section-head"><h2>Next live session</h2></div>
+    <section class="section">
+        <div class="section-head"><h2>Next live session</h2></div>
+        @if (NextSession is not null)
+        {
             <div class="session-card">
-                <img class="session-photo" src="/images/instructors/next_live_session_default.jpg" alt="" />
+                <img class="session-photo" src="images/instructors/default.jpg" alt="" />
                 <div class="session-body">
                     <h3 class="text-h3">@NextSession.Topic</h3>
                     <p class="text-small">@NextSession.ScheduledAt.ToString("ddd, MMM d · h:mm tt")</p>
                 </div>
                 <a class="join-btn" href="@($"/sessions/{NextSession.Id}/checkin")">Check in</a>
             </div>
-        </section>
-    }
-
+        }
+        else
+        {
+            <div class="empty-state text-small">
+                No upcoming live session scheduled yet.
+            </div>
+        }
+    </section>
+    
     <!-- Achievements -->
     <section class="section">
         <div class="section-head"><h2>Achievements</h2></div>
-        <div class="badge-grid">
+        <div class="badge-scroll">
             @foreach (var badge in Achievements)
             {
                 <div class="badge @(badge.Unlocked ? "unlocked" : "")" title="@badge.Description">
