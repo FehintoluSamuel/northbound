@@ -1,0 +1,275 @@
+@page "/quizzes/{QuizId:int}/take"
+@rendermode InteractiveServer
+@layout AppLayout
+@using NorthboundSessions.Web.Services
+@using NorthboundSessions.Data
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject QuizService QuizService
+@inject NavigationManager Nav
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Web.Data
+
+
+@if (QuizNotFound)
+{
+    <div class="container"><p class="text-body">This quiz doesn't exist.</p></div>
+}
+else if (AlreadyAttempted)
+{
+    <!-- No retakes allowed — this replaces the question flow entirely -->
+    <div class="container">
+        <div class="warning-card">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--live)" stroke-width="2">
+                <circle cx="12" cy="12" r="9" /><path d="M12 8v5" /><circle cx="12" cy="16" r=".5" fill="var(--live)" />
+            </svg>
+            <h2>You've already taken this quiz</h2>
+            <p class="text-small">Each quiz can only be attempted once. You scored @PastAttemptScore% on @PastAttemptDate?.ToString("MMM d, yyyy").</p>
+            <button class="btn-primary" @onclick="BackToLesson">Back to lesson</button>
+        </div>
+    </div>
+}
+else if (CurrentQuiz is not null && Questions.Count > 0)
+{
+    <div class="back-row">
+        <a class="back-link" href="@($"/lessons/{CurrentQuiz.LessonId}")">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6" /></svg>
+            Back to lesson
+        </a>
+    </div>
+
+    <div class="container">
+
+        @if (Stage == QuizStage.Question)
+        {
+            var q = Questions[CurrentQuestionIndex];
+            <div class="quiz-header">
+                <div class="eyebrow">@CurrentQuiz.Title</div>
+                <h1>Question @(CurrentQuestionIndex + 1) of @Questions.Count</h1>
+            </div>
+
+            <div class="progress-bar-row">
+                <div class="progress-track"><div class="progress-fill" style="width:@(AnsweredCount * 100 / Questions.Count)%"></div></div>
+                <span class="progress-label">@AnsweredCount/@Questions.Count answered</span>
+            </div>
+
+            <div class="question-text">@q.QuestionText</div>
+
+            @foreach (var opt in q.Options)
+            {
+                var isSelected = SelectedOptions.TryGetValue(q.Id, out var sel) && sel == opt.Id;
+                <div class="option-card @(isSelected ? "selected" : "")" @onclick="() => SelectOption(q.Id, opt.Id)">
+                    <div class="option-radio"><div class="dot"></div></div>
+                    <div class="option-text">@opt.OptionText</div>
+                </div>
+            }
+
+            <div class="nav-row">
+                <button class="btn-outline" disabled="@(CurrentQuestionIndex == 0)" @onclick="GoPrevious">Previous</button>
+                @if (CurrentQuestionIndex < Questions.Count - 1)
+                {
+                    <button class="btn-primary" @onclick="GoNext">Next</button>
+                }
+                else
+                {
+                    <button class="btn-primary" @onclick="() => Stage = QuizStage.Review">Review answers</button>
+                }
+            </div>
+        }
+        else if (Stage == QuizStage.Review)
+        {
+            <div class="quiz-header">
+                <div class="eyebrow">@CurrentQuiz.Title</div>
+                <h1>Review your answers</h1>
+            </div>
+
+            @for (int i = 0; i < Questions.Count; i++)
+            {
+                var idx = i;
+                var q = Questions[idx];
+                var answered = SelectedOptions.TryGetValue(q.Id, out var selId);
+                var answerText = answered ? q.Options.First(o => o.Id == selId).OptionText : null;
+
+                <div class="review-item">
+                    <div class="review-q">@(idx + 1). @q.QuestionText</div>
+                    <div class="review-a-row">
+                        @if (answered)
+                        {
+                            <span class="review-a">@answerText</span>
+                        }
+                        else
+                        {
+                            <span class="review-a unanswered">Not answered</span>
+                        }
+                        <a class="edit-link" @onclick="() => JumpToQuestion(idx)">@(answered ? "Edit" : "Answer")</a>
+                    </div>
+                </div>
+            }
+
+            <div class="nav-row">
+                <button class="btn-outline" @onclick="() => Stage = QuizStage.Question">Back to questions</button>
+                <button class="btn-primary" disabled="@(!AllAnswered)" @onclick="SubmitQuiz">Submit quiz</button>
+            </div>
+            @if (!AllAnswered)
+            {
+                <p class="hint-text">Answer all questions to submit</p>
+            }
+        }
+        else if (Stage == QuizStage.Results)
+        {
+            <div class="results-hero">
+                <div class="score-ring-wrap">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="52" stroke="var(--offwhite)" stroke-width="10" fill="none" />
+                        <circle cx="60" cy="60" r="52" stroke="var(--spark)" stroke-width="10" fill="none"
+                                stroke-dasharray="326.7" stroke-dashoffset="@ScoreRingOffset" stroke-linecap="round" />
+                    </svg>
+                    <div class="score-num">@FinalScore%</div>
+                </div>
+                <h2>@(FinalScore >= 70 ? "Nice work" : "Keep practicing")</h2>
+                <p class="text-small">You got @CorrectCount of @Questions.Count questions correct</p>
+            </div>
+
+            @foreach (var q in Questions)
+            {
+                var selectedId = SelectedOptions.GetValueOrDefault(q.Id);
+                var correctOpt = q.Options.FirstOrDefault(o => o.IsCorrect);
+                var pickedCorrect = correctOpt is not null && selectedId == correctOpt.Id;
+
+                <div class="review-item">
+                    <div class="review-q">@q.QuestionText</div>
+                    @if (!pickedCorrect && selectedId != 0)
+                    {
+                        var picked = q.Options.First(o => o.Id == selectedId);
+                        <div class="option-card incorrect result-row">
+                            <div class="option-radio"><div class="dot"></div></div>
+                            <div class="option-text">@picked.OptionText (your answer)</div>
+                        </div>
+                    }
+                    @if (correctOpt is not null)
+                    {
+                        <div class="option-card correct result-row">
+                            <div class="option-radio"><div class="dot"></div></div>
+                            <div class="option-text">@correctOpt.OptionText @(pickedCorrect ? "" : "(correct)")</div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="nav-row">
+                <button class="btn-primary full" @onclick="BackToLesson">Back to lesson</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int QuizId { get; set; }
+
+    private enum QuizStage { Question, Review, Results }
+
+    private Quiz? CurrentQuiz;
+    private List<QuizQuestion> Questions = new();
+    private Dictionary<int, int> SelectedOptions = new(); // QuestionId -> QuestionOptionId
+    private QuizStage Stage = QuizStage.Question;
+    private int CurrentQuestionIndex;
+    private bool QuizNotFound;
+    private bool AlreadyAttempted;
+    private int PastAttemptScore;
+    private DateTime? PastAttemptDate;
+    private int FinalScore;
+    private int CorrectCount;
+    private string _studentId = string.Empty;
+
+    private int AnsweredCount => SelectedOptions.Count;
+    private bool AllAnswered => Questions.All(q => SelectedOptions.ContainsKey(q.Id));
+    private double ScoreRingOffset => 326.7 - (326.7 * FinalScore / 100.0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        // No retakes allowed — check for an existing attempt first,
+        // before loading question content at all.
+        if (!string.IsNullOrEmpty(_studentId))
+        {
+            var existing = await db.QuizAttempts
+                .Where(a => a.QuizId == QuizId && a.StudentId == _studentId)
+                .FirstOrDefaultAsync();
+
+            if (existing is not null)
+            {
+                AlreadyAttempted = true;
+                PastAttemptScore = existing.Score;
+                PastAttemptDate = existing.SubmittedAt.DateTime;
+                CurrentQuiz = await db.Quizzes.FindAsync(QuizId); // needed for BackToLesson's LessonId
+                return;
+            }
+        }
+
+        var result = await QuizService.GetQuizWithDetailsAsync(QuizId);
+        if (result is null)
+        {
+            QuizNotFound = true;
+            return;
+        }
+
+        CurrentQuiz = result;
+        Questions = result.Questions.ToList();
+    }
+
+    private void SelectOption(int questionId, int optionId)
+    {
+        SelectedOptions[questionId] = optionId;
+    }
+
+    private void GoNext()
+    {
+        if (CurrentQuestionIndex < Questions.Count - 1) CurrentQuestionIndex++;
+    }
+
+    private void GoPrevious()
+    {
+        if (CurrentQuestionIndex > 0) CurrentQuestionIndex--;
+    }
+
+    private void JumpToQuestion(int index)
+    {
+        CurrentQuestionIndex = index;
+        Stage = QuizStage.Question;
+    }
+
+    private async Task SubmitQuiz()
+    {
+        if (!AllAnswered || string.IsNullOrEmpty(_studentId)) return;
+
+        // Grading happens server-side against real IsCorrect data —
+        // never trust a client-computed score, per the handoff.
+        await QuizService.SubmitQuizAsync(QuizId, _studentId, SelectedOptions);
+
+        // Compute the results-screen breakdown from the same option data
+        // already loaded client-side (safe now that the quiz is submitted
+        // and grading has happened) rather than assuming a specific
+        // return shape from SubmitQuizAsync — confirm its actual return
+        // type and simplify this if it already includes a score/breakdown.
+        CorrectCount = Questions.Count(q =>
+        {
+            var correctOpt = q.Options.FirstOrDefault(o => o.IsCorrect);
+            return correctOpt is not null && SelectedOptions.GetValueOrDefault(q.Id) == correctOpt.Id;
+        });
+        FinalScore = (int)Math.Round(CorrectCount * 100.0 / Questions.Count);
+
+        Stage = QuizStage.Results;
+    }
+
+    private void BackToLesson()
+    {
+        if (CurrentQuiz is not null)
+        {
+            Nav.NavigateTo($"/lessons/{CurrentQuiz.LessonId}");
+        }
+    }
+}

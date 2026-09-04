@@ -11,6 +11,7 @@
 @using NorthboundSessions.Web.Data
 @using NorthboundSessions.Web.Services
 @using NorthboundSessions.Data
+@inject NavigationManager Nav
 @attribute [Authorize]
 
 
@@ -210,8 +211,7 @@ else if (CurrentLesson is not null)
     {
         if (QuizId is not null)
         {
-            // NavigationManager.NavigateTo($"/quizzes/{QuizId}/take");
-            // TODO: inject NavigationManager once wiring this up for real.
+            Nav.NavigateTo($"/quizzes/{QuizId}/take");
         }
     }
 

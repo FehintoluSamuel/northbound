@@ -1,0 +1,149 @@
+@page "/progress"
+@rendermode InteractiveServer
+@layout AppLayout
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Data
+@using NorthboundSessions.Web.Services
+@inject NavigationManager Nav
+@using NorthboundSessions.Web.Data
+
+<div class="container">
+    <div class="page-header">
+        <h1>Your progress</h1>
+    </div>
+
+    <!-- Overview -->
+    <section class="section">
+        <div class="metric-row">
+            <div class="metric"><div class="metric-num text-stat">@LessonsCompletedCount</div><div class="text-small">Lessons completed</div></div>
+            <div class="metric"><div class="metric-num text-stat">@(AverageQuizScore is null ? "—" : $"{AverageQuizScore:0}%")</div><div class="text-small">Average quiz score</div></div>
+            <div class="metric"><div class="metric-num text-stat">@SessionsAttendedCount</div><div class="text-small">Sessions attended</div></div>
+            <div class="metric"><div class="metric-num text-stat">@CurrentStreak</div><div class="text-small">Current streak</div></div>
+        </div>
+    </section>
+
+    <!-- Quiz history -->
+    <section class="section">
+        <div class="section-head"><h2>Quiz history</h2></div>
+        @if (QuizHistory.Count == 0)
+        {
+            <div class="empty-state text-small">No quizzes attempted yet.</div>
+        }
+        else
+        {
+            <div class="history-list">
+                @foreach (var attempt in QuizHistory)
+                {
+                    <div class="history-item">
+                        <div class="score-chip @(attempt.Score >= 70 ? "pass" : "fail")">@attempt.Score%</div>
+                        <div class="history-body">
+                            <div class="history-title text-body">@attempt.QuizTitle</div>
+                            <div class="text-small">@attempt.SubmittedAt.ToString("MMM d, yyyy")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <!-- Attendance history -->
+    <section class="section">
+        <div class="section-head"><h2>Session attendance</h2></div>
+        @if (AttendanceHistory.Count == 0)
+        {
+            <div class="empty-state text-small">No sessions attended yet.</div>
+        }
+        else
+        {
+            <div class="history-list">
+                @foreach (var record in AttendanceHistory)
+                {
+                    <div class="history-item">
+                        <div class="check-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" /></svg>
+                        </div>
+                        <div class="history-body">
+                            <div class="history-title text-body">@record.Topic</div>
+                            <div class="text-small">Checked in @record.CheckedInAt.ToString("MMM d, yyyy")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    private int LessonsCompletedCount;
+    private double? AverageQuizScore;
+    private int SessionsAttendedCount;
+    private int CurrentStreak;
+    private string _studentId = string.Empty;
+
+    private List<QuizHistoryItem> QuizHistory = new();
+    private List<AttendanceHistoryItem> AttendanceHistory = new();
+
+    private record QuizHistoryItem(string QuizTitle, int Score, DateTime SubmittedAt);
+    private record AttendanceHistoryItem(string Topic, DateTime CheckedInAt);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        if (string.IsNullOrEmpty(_studentId)) return;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        var attempts = await db.QuizAttempts
+            .Where(a => a.StudentId == _studentId)
+            .Include(a => a.Quiz)
+            .OrderByDescending(a => a.SubmittedAt)
+            .ToListAsync();
+
+        var attendances = await db.Attendances
+            .Where(a => a.StudentId == _studentId)
+            .Include(a => a.LiveSession)
+            .OrderByDescending(a => a.CheckedInAt)
+            .ToListAsync();
+
+        LessonsCompletedCount = attempts.Select(a => a.QuizId).Distinct().Count();
+        AverageQuizScore = attempts.Count > 0 ? attempts.Average(a => a.Score) : null;
+        SessionsAttendedCount = attendances.Count;
+
+        var activityDates = attempts.Select(a => a.SubmittedAt.Date)
+            .Concat(attendances.Select(a => a.CheckedInAt.Date))
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToList();
+
+        CurrentStreak = ComputeCurrentStreak(activityDates);
+
+        QuizHistory = attempts
+            .Select(a => new QuizHistoryItem(a.Quiz?.Title ?? "Quiz", a.Score, a.SubmittedAt.DateTime))
+            .ToList();
+
+        AttendanceHistory = attendances
+            .Select(a => new AttendanceHistoryItem(a.LiveSession?.Topic ?? "Live session", a.CheckedInAt.DateTime))
+            .ToList();
+    }
+
+    private static int ComputeCurrentStreak(List<DateTime> datesDescending)
+    {
+        if (datesDescending.Count == 0) return 0;
+
+        var cursor = DateTime.UtcNow.Date;
+        if (!datesDescending.Contains(cursor)) cursor = cursor.AddDays(-1);
+
+        var streak = 0;
+        while (datesDescending.Contains(cursor))
+        {
+            streak++;
+            cursor = cursor.AddDays(-1);
+        }
+        return streak;
+    }
+}
+
