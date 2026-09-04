@@ -377,3 +377,26 @@ h2 {
 .activity-text {
     flex: 1;
 }
+
+
+.metric {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color .15s ease, background .15s ease;
+}
+
+.metric:hover {
+    border-color: var(--navy);
+    background: var(--offwhite);
+}
+
+.activity-item {
+    text-decoration: none;
+    color: inherit;
+    transition: background .15s ease;
+}
+
+.activity-item:hover {
+    background: var(--offwhite);
+}

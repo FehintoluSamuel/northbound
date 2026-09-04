@@ -1,61 +1,103 @@
 @page "/sessions/{LiveSessionId:int}/checkin"
 @rendermode InteractiveServer
 @layout AppLayout
-@attribute [Authorize]
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Authorization
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject AttendanceService AttendanceService
+@inject NavigationManager Nav
 @using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Web.Services
 @using NorthboundSessions.Data
 @using NorthboundSessions.Web.Data
-@using NorthboundSessions.Web.Services
-@inject IDbContextFactory<ApplicationDbContext> DbFactory
-@inject AttendanceService AttendanceService
 
-@if (session is null)
+
+
+@if (SessionNotFound)
 {
-    <p>Loading...</p>
+    <div class="container"><p class="text-body">This session doesn't exist.</p></div>
 }
-else
+else if (CurrentSession is not null)
 {
-    <h3>@session.Topic</h3>
-    <p>@session.ScheduledAt.ToLocalTime().ToString("f")</p>
+    <div class="back-row">
+        <a class="back-link" href="/sessions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6" /></svg>
+            Sessions
+        </a>
+    </div>
 
-    @if (checkedIn)
-    {
-        <p><strong>You're checked in. See you there!</strong></p>
-    }
-    else
-    {
-        <button @onclick="HandleCheckIn">I'm here</button>
-    }
+    <div class="container">
+        <div class="checkin-card">
+            <div class="session-date-lg">
+                <span class="d">@CurrentSession.ScheduledAt.Day</span>
+                <span class="m">@CurrentSession.ScheduledAt.ToString("MMM").ToUpper()</span>
+            </div>
+            <h1>@CurrentSession.Topic</h1>
+            <p class="text-small">@CurrentSession.ScheduledAt.ToString("dddd, MMM d · h:mm tt")</p>
+
+            @if (AlreadyCheckedIn)
+            {
+                <div class="status-banner checked-in">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" /></svg>
+                    You're checked in
+                </div>
+                @if (!string.IsNullOrEmpty(CurrentSession.MeetLink))
+                {
+                    <a class="btn-primary full" href="@CurrentSession.MeetLink" target="_blank" rel="noopener">Join meeting</a>
+                }
+            }
+            else
+            {
+                <button class="btn-primary full" @onclick="CheckIn" disabled="@IsCheckingIn">
+                    @(IsCheckingIn ? "Checking in..." : "Check in")
+                </button>
+                @if (!string.IsNullOrEmpty(CurrentSession.MeetLink))
+                {
+                    <a class="btn-outline full" href="@CurrentSession.MeetLink" target="_blank" rel="noopener">Join meeting</a>
+                }
+            }
+        </div>
+    </div>
 }
 
 @code {
-    [Parameter]
-    public int LiveSessionId { get; set; }
+    [Parameter] public int LiveSessionId { get; set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState>? AuthStateTask { get; set; }
-
-    private LiveSession? session;
-    private bool checkedIn = false;
-    private string studentId = "";
+    private LiveSession? CurrentSession;
+    private bool SessionNotFound;
+    private bool AlreadyCheckedIn;
+    private bool IsCheckingIn;
+    private string _studentId = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        await using var context = await DbFactory.CreateDbContextAsync();
-        session = await context.LiveSessions.FirstOrDefaultAsync(s => s.Id == LiveSessionId);
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
-        if (AuthStateTask is not null)
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        CurrentSession = await db.LiveSessions.FindAsync(LiveSessionId);
+        if (CurrentSession is null)
         {
-            var authState = await AuthStateTask;
-            studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+            SessionNotFound = true;
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(_studentId))
+        {
+            AlreadyCheckedIn = await db.Attendances
+                .AnyAsync(a => a.LiveSessionId == LiveSessionId && a.StudentId == _studentId);
         }
     }
 
-    private async Task HandleCheckIn()
+    private async Task CheckIn()
     {
-        await AttendanceService.CheckInAsync(LiveSessionId, studentId);
-        checkedIn = true;
+        if (string.IsNullOrEmpty(_studentId) || IsCheckingIn) return;
+
+        IsCheckingIn = true;
+        // CheckInAsync is idempotent per the handoff — safe even if this
+        // fires twice (e.g. a double-click before the button re-renders).
+        await AttendanceService.CheckInAsync(LiveSessionId, _studentId);
+        AlreadyCheckedIn = true;
+        IsCheckingIn = false;
     }
 }

@@ -1,0 +1,116 @@
+@page "/all-sessions"
+@rendermode InteractiveServer
+@layout AppLayout
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Data
+@using NorthboundSessions.Web.Services
+@using NorthboundSessions.Web.Data
+
+
+<div class="container">
+    <div class="page-header"><h1>Sessions</h1></div>
+
+    <section class="section">
+        <div class="section-head"><h2>Upcoming</h2></div>
+        @if (Upcoming.Count == 0)
+        {
+            <div class="empty-state text-small">No upcoming sessions scheduled.</div>
+        }
+        else
+        {
+            <div class="list">
+                @foreach (var item in Upcoming)
+                {
+                    <div class="list-item" @onclick="() => GoToSession(item.Id)">
+                        <div class="status-icon @(item.CheckedIn ? "done" : "pending")">
+                            @if (item.CheckedIn)
+                            {
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" /></svg>
+                            }
+                            else
+                            {
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+                            }
+                        </div>
+                        <div class="list-body">
+                            <div class="list-title text-body">@item.Topic</div>
+                            <div class="text-small">@item.ScheduledAt.ToString("ddd, MMM d · h:mm tt")@(item.CheckedIn ? " · checked in" : "")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="section">
+        <div class="section-head"><h2>Past</h2></div>
+        @if (Past.Count == 0)
+        {
+            <div class="empty-state text-small">No past sessions yet.</div>
+        }
+        else
+        {
+            <div class="list">
+                @foreach (var item in Past)
+                {
+                    <div class="list-item" @onclick="() => GoToSession(item.Id)">
+                        <div class="status-icon @(item.CheckedIn ? "done" : "missed")">
+                            @if (item.CheckedIn)
+                            {
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" /></svg>
+                            }
+                            else
+                            {
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                            }
+                        </div>
+                        <div class="list-body">
+                            <div class="list-title text-body">@item.Topic</div>
+                            <div class="text-small">@item.ScheduledAt.ToString("MMM d, yyyy")@(item.CheckedIn ? " · attended" : " · missed")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    private record SessionRow(int Id, string Topic, DateTimeOffset ScheduledAt, bool CheckedIn);
+
+    private List<SessionRow> Upcoming = new();
+    private List<SessionRow> Past = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        var sessions = await db.LiveSessions.OrderBy(s => s.ScheduledAt).ToListAsync();
+
+        var checkedInIds = string.IsNullOrEmpty(studentId)
+            ? new HashSet<int>()
+            : (await db.Attendances
+                .Where(a => a.StudentId == studentId)
+                .Select(a => a.LiveSessionId)
+                .ToListAsync()).ToHashSet();
+
+        var now = DateTimeOffset.UtcNow;
+
+        foreach (var s in sessions)
+        {
+            var row = new SessionRow(s.Id, s.Topic, s.ScheduledAt, checkedInIds.Contains(s.Id));
+            if (s.ScheduledAt >= now) Upcoming.Add(row);
+            else Past.Add(row);
+        }
+
+        Past.Reverse(); // most recent past session first
+    }
+
+    private void GoToSession(int id) => Nav.NavigateTo($"/sessions/{id}/checkin");
+}

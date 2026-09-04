@@ -1,0 +1,104 @@
+@page "/view-all-quizzes"
+@rendermode InteractiveServer
+@layout AppLayout
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Data
+@using NorthboundSessions.Web.Services
+@using NorthboundSessions.Data
+@using NorthboundSessions.Web.Data
+
+<div class="container">
+    <div class="page-header"><h1>All Quizzes</h1></div>
+
+    @if (Taken.Count > 0)
+    {
+        <section class="section">
+            <div class="section-head"><h2>Taken</h2></div>
+            <div class="list">
+                @foreach (var item in Taken)
+                {
+                    <div class="list-item" @onclick="() => GoToQuiz(item.Id)">
+                        <div class="score-chip @(item.Score >= 70 ? "pass" : "fail")">@item.Score%</div>
+                        <div class="list-body">
+                            <div class="list-title text-body">@item.Title</div>
+                            <div class="text-small">@item.LessonTitle</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="section">
+        <div class="section-head"><h2>Available</h2></div>
+        @if (Available.Count == 0)
+        {
+            <div class="empty-state text-small">No quizzes available yet.</div>
+        }
+        else
+        {
+            <div class="list">
+                @foreach (var item in Available)
+                {
+                    <div class="list-item" @onclick="() => GoToQuiz(item.Id)">
+                        <div class="status-icon pending">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                        </div>
+                        <div class="list-body">
+                            <div class="list-title text-body">@item.Title</div>
+                            <div class="text-small">@item.LessonTitle</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    private record QuizRow(int Id, string Title, string LessonTitle, int Score);
+
+    private List<QuizRow> Taken = new();
+    private List<QuizRow> Available = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        // Only quizzes belonging to already-released lessons are shown at all.
+        var quizzes = await db.Quizzes
+            .Include(q => q.Lesson)
+            .Where(q => q.Lesson.ReleaseDate <= DateOnly.FromDateTime(DateTime.UtcNow))
+            .ToListAsync();
+
+        var attempts = string.IsNullOrEmpty(studentId)
+            ? new Dictionary<int, int>()
+            : (await db.QuizAttempts
+                .Where(a => a.StudentId == studentId)
+                .ToListAsync())
+                .GroupBy(a => a.QuizId)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.SubmittedAt).First().Score);
+
+        foreach (var quiz in quizzes)
+        {
+            var lessonTitle = quiz.Lesson?.Title ?? "Lesson";
+
+            if (attempts.TryGetValue(quiz.Id, out var score))
+            {
+                Taken.Add(new QuizRow(quiz.Id, quiz.Title, lessonTitle, score));
+            }
+            else
+            {
+                Available.Add(new QuizRow(quiz.Id, quiz.Title, lessonTitle, 0));
+            }
+        }
+    }
+
+    private void GoToQuiz(int quizId) => Nav.NavigateTo($"/quizzes/{quizId}/take");
+}

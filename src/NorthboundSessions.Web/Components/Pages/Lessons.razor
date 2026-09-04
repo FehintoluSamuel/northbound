@@ -5,6 +5,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject LessonProgressService ProgressService
 @inject SlideService SlideService
+@inject NavigationManager Nav
 @inject IJSRuntime JS
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Authorization
@@ -219,8 +220,7 @@ else if (CurrentLesson is not null)
     {
         if (NextSessionId is not null)
         {
-            // NavigationManager.NavigateTo($"/sessions/{NextSessionId}/checkin");
-            // TODO: inject NavigationManager once wiring this up for real.
+            Nav.NavigateTo($"/sessions/{NextSessionId}/checkin");
         }
     }
-}
+    }

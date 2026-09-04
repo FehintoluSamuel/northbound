@@ -1,0 +1,115 @@
+@page "/view-all-lessons"
+@rendermode InteractiveServer
+@layout AppLayout
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Data
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@using NorthboundSessions.Web.Data
+
+
+
+
+<div class="container">
+    <div class="page-header"><h1>Lessons</h1></div>
+
+    @if (Completed.Count > 0)
+    {
+        <section class="section">
+            <div class="section-head"><h2>Completed</h2></div>
+            <div class="list">
+                @foreach (var item in Completed)
+                {
+                    <div class="list-item" @onclick="() => GoToLesson(item.Id)">
+                        <div class="status-icon done">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" /></svg>
+                        </div>
+                        <div class="list-body">
+                            <div class="list-title text-body">@item.Title</div>
+                            <div class="text-small">Released @item.ReleaseDate.ToString("MMM d")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="section">
+        <div class="section-head"><h2>Available</h2></div>
+        @if (Available.Count == 0)
+        {
+            <div class="empty-state text-small">No lessons available yet.</div>
+        }
+        else
+        {
+            <div class="list">
+                @foreach (var item in Available)
+                {
+                    <div class="list-item" @onclick="() => GoToLesson(item.Id)">
+                        <div class="status-icon pending">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" /></svg>
+                        </div>
+                        <div class="list-body">
+                            <div class="list-title text-body">@item.Title</div>
+                            <div class="text-small">Released @item.ReleaseDate.ToString("MMM d")@(item.IsLiveDay ? " · live session day" : "")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    private record LessonRow(int Id, string Title, DateOnly ReleaseDate, bool IsLiveDay);
+
+    private List<LessonRow> Completed = new();
+    private List<LessonRow> Available = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        var releasedLessons = await db.Lessons
+            .Where(l => l.ReleaseDate <= DateOnly.FromDateTime(DateTime.UtcNow))
+            .OrderByDescending(l => l.ReleaseDate)
+            .ToListAsync();
+
+        // Quiz per lesson, and which quizzes this student has already attempted.
+        var lessonQuizIds = await db.Quizzes
+
+            .Where(q => releasedLessons.Select(l => l.Id).Contains(q.LessonId))
+
+            .GroupBy(q => q.LessonId)
+
+            .Select(g => g.OrderBy(q => q.Id).First())
+
+            .ToDictionaryAsync(q => q.LessonId, q => q.Id);
+
+
+        var attemptedQuizIds = string.IsNullOrEmpty(studentId)
+            ? new HashSet<int>()
+            : (await db.QuizAttempts
+                .Where(a => a.StudentId == studentId)
+                .Select(a => a.QuizId)
+                .ToListAsync()).ToHashSet();
+
+        foreach (var lesson in releasedLessons)
+        {
+            var row = new LessonRow(lesson.Id, lesson.Title, lesson.ReleaseDate, lesson.IsLiveDay);
+            var hasQuiz = lessonQuizIds.TryGetValue(lesson.Id, out var quizId);
+            var completed = hasQuiz && attemptedQuizIds.Contains(quizId);
+
+            if (completed) Completed.Add(row);
+            else Available.Add(row);
+        }
+    }
+
+    private void GoToLesson(int lessonId) => Nav.NavigateTo($"/lessons/{lessonId}");
+}
