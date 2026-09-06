@@ -1,49 +1,264 @@
 @page "/admin/lessons/create"
 @rendermode InteractiveServer
 @layout AdminLayout
+@attribute [Authorize(Roles = "Instructor")]
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject NavigationManager Nav
 @using Microsoft.AspNetCore.Authorization
 @using NorthboundSessions.Data
+@inject AuthenticationStateProvider AuthStateProvider
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
 @using NorthboundSessions.Web.Data
-@inject NavigationManager Nav
-@inject IDbContextFactory<ApplicationDbContext> DbFactory
-@attribute [Authorize(Roles = "Instructor")]
+@using NorthboundSessions.Web.Services
 
 
+<div class="page-title-row"><h1>Create lesson</h1></div>
+<div class="page-sub">Lesson content, market chart symbol, and an optional quiz — all created together.</div>
 
-<h3>Create a Lesson</h3>
+@if (SuccessMessage is not null)
+{
+    <div class="alert success">@SuccessMessage</div>
+}
+@if (ErrorMessage is not null)
+{
+    <div class="alert error">@ErrorMessage</div>
+}
 
-<EditForm Model="@newLesson" OnValidSubmit="@SaveLesson">
-    <DataAnnotationsValidator />
+<div class="form-card">
+    <h2>Lesson details</h2>
 
-    <label>Title</label>
-    <InputText @bind-Value="newLesson.Title" />
+    <label class="field-label">Title</label>
+    <input class="text-input" @bind="Title" placeholder="e.g. Reading the Tape: NYSE:NKE" />
 
-    <label>Outline Content</label>
-    <InputTextArea @bind-Value="newLesson.OutlineContent" />
+    <div class="field-row">
+        <div>
+            <label class="field-label">Release date</label>
+            <input class="text-input" type="date" @bind="ReleaseDateInput" />
+        </div>
+        <div>
+            <label class="field-label">Market symbol <span class="optional">(optional)</span></label>
+            <input class="text-input" @bind="MarketSymbol" placeholder="EXCHANGE:TICKER, e.g. NYSE:NKE" />
+        </div>
+    </div>
 
-        <label>Market Symbol</label>
-    <InputTextArea @bind-Value="newLesson.MarketSymbol" />
+    <label class="checkbox-row">
+        <input type="checkbox" @bind="IsLiveDay" />
+        This lesson has a live session today
+    </label>
 
-    <label>Release Date</label>
-    <InputDate @bind-Value="releaseDateProxy" />
+    <label class="field-label">Lesson content <span class="optional">(Markdown)</span></label>
+    <textarea class="text-area" rows="10" @bind="OutlineContent"
+              placeholder="Write the lesson in Markdown — rendering is handled automatically."></textarea>
+</div>
 
-    <label>Is Live Day?</label>
-    <InputCheckbox @bind-Value="newLesson.IsLiveDay" />
+<div class="form-card">
+    <div class="section-head-row">
+        <h2>Quiz</h2>
+        <span class="optional-tag">Optional — leave all questions blank to skip</span>
+    </div>
 
-    <button type="submit">Save Lesson</button>
-</EditForm>
+    <label class="field-label">Quiz title <span class="optional">(optional, defaults to "{Lesson title} Quiz")</span></label>
+    <input class="text-input" @bind="QuizTitle" placeholder="Leave blank to auto-generate" />
+
+    @for (int qi = 0; qi < Questions.Count; qi++)
+    {
+        var questionIndex = qi;
+        var question = Questions[questionIndex];
+
+        <div class="question-block">
+            <div class="question-block-head">
+                <span class="question-number">Question @(questionIndex + 1)</span>
+                @if (Questions.Count > 1)
+                {
+                    <button type="button" class="remove-btn" @onclick="() => RemoveQuestion(questionIndex)">Remove</button>
+                }
+            </div>
+
+            <textarea class="text-area" rows="2" @bind="question.Text" placeholder="Question text"></textarea>
+
+            @for (int oi = 0; oi < question.Options.Count; oi++)
+            {
+                var optionIndex = oi;
+                var option = question.Options[optionIndex];
+
+                <div class="option-row">
+                    <input type="radio" name="@($"correct-{questionIndex}")"
+                           checked="@option.IsCorrect"
+                           @onchange="() => SetCorrectOption(questionIndex, optionIndex)" />
+                    <input class="text-input option-text" @bind="option.Text" placeholder="@($"Option {optionIndex + 1}")" />
+                    @if (question.Options.Count > 2)
+                    {
+                        <button type="button" class="remove-option-btn" @onclick="() => RemoveOption(questionIndex, optionIndex)" aria-label="Remove option">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                        </button>
+                    }
+                </div>
+            }
+
+            <button type="button" class="add-option-btn" @onclick="() => AddOption(questionIndex)">+ Add option</button>
+        </div>
+    }
+
+    <button type="button" class="add-question-btn" @onclick="AddQuestion">+ Add question</button>
+</div>
+
+<div class="submit-row">
+    <button class="btn-primary" @onclick="SubmitLesson" disabled="@IsSubmitting">
+        @(IsSubmitting ? "Creating..." : "Create lesson")
+    </button>
+</div>
 
 @code {
-    private Lesson newLesson = new() { Title = "", OutlineContent = "" };
-    private DateTime releaseDateProxy;
+    private string Title = string.Empty;
+    private DateTime ReleaseDateInput = DateTime.Today;
+    private string? MarketSymbol;
+    private bool IsLiveDay;
+    private string OutlineContent = string.Empty;
 
-    private async Task SaveLesson()
+    private string QuizTitle = string.Empty;
+    private List<QuestionForm> Questions = new() { NewQuestion() };
+
+    private bool IsSubmitting;
+    private string? SuccessMessage;
+    private string? ErrorMessage;
+
+    private class QuestionForm
     {
-        newLesson.ReleaseDate = DateOnly.FromDateTime(releaseDateProxy);
-        await using var context = await DbFactory.CreateDbContextAsync();
-        context.Lessons.Add(newLesson);
-        await context.SaveChangesAsync();
-        Nav.NavigateTo("/admin/lessons/create");
+        public string Text { get; set; } = string.Empty;
+        public List<OptionForm> Options { get; set; } = new() { new(), new() };
+    }
+
+    private class OptionForm
+    {
+        public string Text { get; set; } = string.Empty;
+        public bool IsCorrect { get; set; }
+    }
+
+    private static QuestionForm NewQuestion() => new();
+
+    private void AddQuestion() => Questions.Add(NewQuestion());
+
+    private void RemoveQuestion(int index) => Questions.RemoveAt(index);
+
+    private void AddOption(int questionIndex) => Questions[questionIndex].Options.Add(new OptionForm());
+
+    private void RemoveOption(int questionIndex, int optionIndex) => Questions[questionIndex].Options.RemoveAt(optionIndex);
+
+    private void SetCorrectOption(int questionIndex, int optionIndex)
+    {
+        var options = Questions[questionIndex].Options;
+        for (int i = 0; i < options.Count; i++)
+        {
+            options[i].IsCorrect = i == optionIndex;
+        }
+    }
+
+    private async Task SubmitLesson()
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        if (string.IsNullOrWhiteSpace(Title) || string.IsNullOrWhiteSpace(OutlineContent))
+        {
+            ErrorMessage = "Title and lesson content are required.";
+            return;
+        }
+
+        var realQuestions = Questions
+            .Where(q => !string.IsNullOrWhiteSpace(q.Text))
+            .ToList();
+
+        foreach (var q in realQuestions)
+        {
+            var realOptions = q.Options.Where(o => !string.IsNullOrWhiteSpace(o.Text)).ToList();
+            if (realOptions.Count < 2)
+            {
+                ErrorMessage = "Every question needs at least 2 options.";
+                return;
+            }
+            if (!realOptions.Any(o => o.IsCorrect))
+            {
+                ErrorMessage = "Every question needs one option marked correct.";
+                return;
+            }
+        }
+
+        IsSubmitting = true;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            var lesson = new Lesson
+            {
+                Title = Title,
+                OutlineContent = OutlineContent,
+                MarketSymbol = string.IsNullOrWhiteSpace(MarketSymbol) ? null : MarketSymbol,
+                ReleaseDate = DateOnly.FromDateTime(ReleaseDateInput),
+                IsLiveDay = IsLiveDay
+            };
+            db.Lessons.Add(lesson);
+            await db.SaveChangesAsync(); // populates lesson.Id
+
+            if (realQuestions.Count > 0)
+            {
+                var quiz = new Quiz
+                {
+                    LessonId = lesson.Id,
+                    Title = string.IsNullOrWhiteSpace(QuizTitle) ? $"{Title} Quiz" : QuizTitle
+                };
+                db.Quizzes.Add(quiz);
+                await db.SaveChangesAsync(); // populates quiz.Id
+
+                var questionOrder = 0;
+                foreach (var q in realQuestions)
+                {
+                    var question = new QuizQuestion
+                    {
+                        QuizId = quiz.Id,
+                        QuestionText = q.Text,
+                        DisplayOrder = questionOrder++
+                    };
+                    db.QuizQuestions.Add(question);
+                    await db.SaveChangesAsync(); // populates question.Id
+
+                    var optionOrder = 0;
+                    foreach (var opt in q.Options.Where(o => !string.IsNullOrWhiteSpace(o.Text)))
+                    {
+                        db.QuizOptions.Add(new QuizOption
+                        {
+                            QuizQuestionId = question.Id,
+                            OptionText = opt.Text,
+                            IsCorrect = opt.IsCorrect,
+                            DisplayOrder = optionOrder++
+                        });
+                    }
+                }
+                await db.SaveChangesAsync();
+            }
+
+            SuccessMessage = $"Lesson \"{Title}\" created successfully.";
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Something went wrong: {ex.Message}";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        Title = string.Empty;
+        MarketSymbol = null;
+        IsLiveDay = false;
+        OutlineContent = string.Empty;
+        QuizTitle = string.Empty;
+        ReleaseDateInput = DateTime.Today;
+        Questions = new() { NewQuestion() };
     }
 }
