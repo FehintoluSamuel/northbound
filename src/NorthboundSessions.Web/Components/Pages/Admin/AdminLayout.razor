@@ -37,15 +37,15 @@
         <div class="nav-section-label">Create</div>
         <NavLink class="nav-item" href="/admin/lessons/create" @onclick="CloseSidebar">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" /></svg>
-            Create lesson
+            New lesson
         </NavLink>
         <NavLink class="nav-item" href="/admin/topics/create" @onclick="CloseSidebar">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
-            Create topic
+            New topic
         </NavLink>
         <NavLink class="nav-item" href="/admin/sessions/create" @onclick="CloseSidebar">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
-            Create live session
+            New live session
         </NavLink>
 
         <div class="sidebar-footer">
@@ -78,9 +78,9 @@
 
     // Simple breadcrumb derived from the current path — good enough until
     // there's a reason for something more structured.
-    private string BreadcrumbLabel => Nav.Uri.Contains("/admin/lessons/create") ? "Admin / Create lesson"
-        : Nav.Uri.Contains("/admin/topics/create") ? "Admin / Create topic"
-        : Nav.Uri.Contains("/admin/sessions/create") ? "Admin / Create live session"
+    private string BreadcrumbLabel => Nav.Uri.Contains("/admin/lessons/create") ? "Admin / New lesson"
+        : Nav.Uri.Contains("/admin/topics/create") ? "Admin / New topic"
+        : Nav.Uri.Contains("/admin/sessions/create") ? "Admin / New live session"
         : "Admin / Student progress";
 
     protected override async Task OnInitializedAsync()
