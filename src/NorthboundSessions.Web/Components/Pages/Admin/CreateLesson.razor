@@ -1,4 +1,6 @@
 @page "/admin/lessons/create"
+@rendermode InteractiveServer
+@layout AdminLayout
 @using Microsoft.AspNetCore.Authorization
 @rendermode InteractiveServer
 @using NorthboundSessions.Data
@@ -7,6 +9,7 @@
 @inject NavigationManager Nav
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @attribute [Authorize(Roles = "Instructor")]
+
 
 
 <h3>Create a Lesson</h3>

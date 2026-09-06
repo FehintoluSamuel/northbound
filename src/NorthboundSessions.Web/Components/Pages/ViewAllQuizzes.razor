@@ -77,13 +77,28 @@
             .Where(q => q.Lesson.ReleaseDate <= DateOnly.FromDateTime(DateTime.UtcNow))
             .ToListAsync();
 
-        var attempts = string.IsNullOrEmpty(studentId)
-            ? new Dictionary<int, int>()
-            : (await db.QuizAttempts
-                .Where(a => a.StudentId == studentId)
-                .ToListAsync())
-                .GroupBy(a => a.QuizId)
-                .ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.SubmittedAt).First().Score);
+        var attemptRows = string.IsNullOrEmpty(studentId)
+            ? new List<QuizAttempt>()
+            : await db.QuizAttempts.Where(a => a.StudentId == studentId).ToListAsync();
+
+        var quizIds = attemptRows.Select(a => a.QuizId).Distinct().ToList();
+        var questionCounts = await db.QuizQuestions
+            .Where(q => quizIds.Contains(q.QuizId))
+            .GroupBy(q => q.QuizId)
+            .Select(g => new { QuizId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.QuizId, x => x.Count);
+
+        var attempts = attemptRows
+            .GroupBy(a => a.QuizId)
+            .ToDictionary(
+                g => g.Key,
+                g =>
+                {
+                    var latest = g.OrderByDescending(a => a.SubmittedAt).First();
+                    return questionCounts.TryGetValue(latest.QuizId, out var total) && total > 0
+                        ? (int)Math.Round(latest.Score * 100.0 / total)
+                        : 0;
+                });
 
         foreach (var quiz in quizzes)
         {

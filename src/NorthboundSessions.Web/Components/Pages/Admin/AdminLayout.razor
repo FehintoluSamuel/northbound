@@ -1,0 +1,100 @@
+@* AdminLayout.razor — sidebar shell for instructor-facing pages.
+   Desktop: fixed sidebar. Mobile (<900px): sidebar becomes an off-canvas
+   drawer toggled by a hamburger button, with a backdrop to close it.
+   Apply [Authorize(Roles = "Instructor")] on each page using this layout —
+   not enforced here, since layouts don't carry auth attributes themselves. *@
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+<div class="admin-shell">
+
+    <!-- Mobile backdrop — click to close the drawer -->
+    @if (SidebarOpen)
+    {
+        <div class="backdrop" @onclick="CloseSidebar"></div>
+    }
+
+    <aside class="sidebar @(SidebarOpen ? "open" : "")">
+        <div class="sidebar-brand">
+            <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+                <circle cx="13" cy="13" r="11.5" stroke="#243896" stroke-width="1.6" />
+                <path d="M13 5.5L15.5 13L13 20.5L10.5 13L13 5.5Z" fill="#243896" />
+                <circle cx="13" cy="13" r="1.6" fill="#16A34A" />
+            </svg>
+            <span>Northbound Admin</span>
+            <button class="close-btn" @onclick="CloseSidebar" aria-label="Close menu">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <div class="nav-section-label">Overview</div>
+        <NavLink class="nav-item" href="/admin/reporting" Match="NavLinkMatch.All" @onclick="CloseSidebar">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18" /><path d="M7 15l4-6 4 4 5-8" /></svg>
+            Student progress
+        </NavLink>
+
+        <div class="nav-section-label">Create</div>
+        <NavLink class="nav-item" href="/admin/lessons/create" @onclick="CloseSidebar">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" /></svg>
+            Create lesson
+        </NavLink>
+        <NavLink class="nav-item" href="/admin/topics/create" @onclick="CloseSidebar">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+            Create topic
+        </NavLink>
+        <NavLink class="nav-item" href="/admin/sessions/create" @onclick="CloseSidebar">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+            Create live session
+        </NavLink>
+
+        <div class="sidebar-footer">
+            <div class="admin-avatar">@Initials</div>
+            <div>
+                <div class="admin-name">@DisplayName</div>
+                <div class="admin-role">Instructor</div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main">
+        <div class="topbar">
+            <button class="hamburger-btn" @onclick="OpenSidebar" aria-label="Open menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <div class="breadcrumb">@BreadcrumbLabel</div>
+        </div>
+
+        <div class="content">
+            @Body
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool SidebarOpen;
+    private string DisplayName = string.Empty;
+    private string Initials = "?";
+
+    // Simple breadcrumb derived from the current path — good enough until
+    // there's a reason for something more structured.
+    private string BreadcrumbLabel => Nav.Uri.Contains("/admin/lessons/create") ? "Admin / Create lesson"
+        : Nav.Uri.Contains("/admin/topics/create") ? "Admin / Create topic"
+        : Nav.Uri.Contains("/admin/sessions/create") ? "Admin / Create live session"
+        : "Admin / Student progress";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name ?? string.Empty;
+        DisplayName = email;
+
+        var localPart = email.Contains('@') ? email[..email.IndexOf('@')] : email;
+        Initials = localPart.Length >= 2
+            ? localPart[..2].ToUpperInvariant()
+            : localPart.ToUpperInvariant().PadRight(2, '?');
+    }
+
+    private void OpenSidebar() => SidebarOpen = true;
+    private void CloseSidebar() => SidebarOpen = false;
+}

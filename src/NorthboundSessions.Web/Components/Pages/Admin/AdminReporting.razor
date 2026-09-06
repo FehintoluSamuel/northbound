@@ -1,0 +1,100 @@
+@page "/admin/reporting"
+@rendermode InteractiveServer
+@layout AdminLayout
+@attribute [Authorize(Roles = "Instructor")]
+@inject ReportingService ReportingService
+@using Microsoft.AspNetCore.Authorization
+@using NorthboundSessions.Data
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Web.Data
+@using NorthboundSessions.Web.Services
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+
+<div class="page-title-row"><h1>Student progress</h1></div>
+<div class="page-sub">Quizzes attempted, average score, and session attendance across all enrolled students</div>
+
+<div class="stat-row">
+    <div class="stat-card"><div class="stat-num">@Summaries.Count</div><div class="stat-label">Enrolled students</div></div>
+    <div class="stat-card"><div class="stat-num">@AvgQuizzesAttempted.ToString("0.0")</div><div class="stat-label">Avg quizzes attempted</div></div>
+    <div class="stat-card"><div class="stat-num">@AvgScore.ToString("0")%</div><div class="stat-label">Avg score across cohort</div></div>
+    <div class="stat-card"><div class="stat-num">@AvgSessionsAttended.ToString("0.0")</div><div class="stat-label">Avg sessions attended</div></div>
+</div>
+
+<div class="toolbar">
+    <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+        <input type="text" placeholder="Search students..." @bind="SearchTerm" @bind:event="oninput" />
+    </div>
+</div>
+
+@if (FilteredSummaries.Count == 0)
+{
+    <div class="empty-state">No students match that search.</div>
+}
+else
+{
+    <div class="data-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Quizzes attempted</th>
+                    <th>Average score</th>
+                    <th>Sessions attended</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in FilteredSummaries)
+                {
+                    <tr>
+                        <td>
+                            <div class="student-cell">
+                                <div class="student-avatar">@Initials(s.Email)</div>
+                                <span class="student-email">@s.Email</span>
+                            </div>
+                        </td>
+                        <td>@s.QuizzesAttempted</td>
+                        <td><span class="score-pill @ScoreClass(s.AverageScore)">@s.AverageScore.ToString("0")%</span></td>
+                        <td>@s.SessionsAttended</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    // Property names on StudentProgressSummary are assumed
+    // (Email, QuizzesAttempted, AverageScore, SessionsAttended) —
+    // confirm these against the actual class and adjust if they differ.
+    private List<StudentProgressSummary> Summaries = new();
+    private string SearchTerm = string.Empty;
+
+    private List<StudentProgressSummary> FilteredSummaries =>
+        string.IsNullOrWhiteSpace(SearchTerm)
+            ? Summaries
+            : Summaries.Where(s => s.Email.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private double AvgQuizzesAttempted => Summaries.Count > 0 ? Summaries.Average(s => s.QuizzesAttempted) : 0;
+    private double AvgScore => Summaries.Count > 0 ? Summaries.Average(s => s.AverageScore) : 0;
+    private double AvgSessionsAttended => Summaries.Count > 0 ? Summaries.Average(s => s.SessionsAttended) : 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Summaries = await ReportingService.GetStudentProgressAsync();
+    }
+
+    private static string ScoreClass(double score) => score switch
+    {
+        >= 70 => "high",
+        >= 50 => "mid",
+        _ => "low"
+    };
+
+    private static string Initials(string email)
+    {
+        var local = email.Contains('@') ? email[..email.IndexOf('@')] : email;
+        return local.Length >= 2 ? local[..2].ToUpperInvariant() : local.ToUpperInvariant().PadRight(2, '?');
+    }
+}

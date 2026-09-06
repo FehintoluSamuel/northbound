@@ -109,6 +109,17 @@
             .OrderByDescending(a => a.CheckedInAt)
             .ToListAsync();
 
+        var quizIds = attempts.Select(a => a.QuizId).Distinct().ToList();
+        var questionCounts = await db.QuizQuestions
+            .Where(q => quizIds.Contains(q.QuizId))
+            .GroupBy(q => q.QuizId)
+            .Select(g => new { QuizId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.QuizId, x => x.Count);
+
+        double ToPercent(QuizAttempt a) =>
+            questionCounts.TryGetValue(a.QuizId, out var total) && total > 0
+                ? a.Score * 100.0 / total : 0;
+
         LessonsCompletedCount = attempts.Select(a => a.QuizId).Distinct().Count();
         AverageQuizScore = attempts.Count > 0 ? attempts.Average(a => a.Score) : null;
         SessionsAttendedCount = attendances.Count;
@@ -122,7 +133,7 @@
         CurrentStreak = ComputeCurrentStreak(activityDates);
 
         QuizHistory = attempts
-            .Select(a => new QuizHistoryItem(a.Quiz?.Title ?? "Quiz", a.Score, a.SubmittedAt.DateTime))
+            .Select(a => new QuizHistoryItem(a.Quiz?.Title ?? "Quiz", (int)Math.Round(ToPercent(a)), a.SubmittedAt.DateTime))
             .ToList();
 
         AttendanceHistory = attendances

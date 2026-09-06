@@ -198,8 +198,19 @@
             .Where(a => a.StudentId == _studentId)
             .ToListAsync();
 
+        var quizIds = attempts.Select(a => a.QuizId).Distinct().ToList();
+        var questionCounts = await db.QuizQuestions
+            .Where(q => quizIds.Contains(q.QuizId))
+            .GroupBy(q => q.QuizId)
+            .Select(g => new { QuizId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.QuizId, x => x.Count);
+
+        double ToPercent(QuizAttempt a) =>
+            questionCounts.TryGetValue(a.QuizId, out var total) && total > 0
+                ? a.Score * 100.0 / total : 0;
+
         LessonsCompletedCount = attempts.Select(a => a.QuizId).Distinct().Count();
-        AverageQuizScore = attempts.Count > 0 ? attempts.Average(a => a.Score) : null;
+        AverageQuizScore = attempts.Count > 0 ? attempts.Average(ToPercent) : null;
         SessionsAttendedCount = attendances.Count;
 
         var activityDates = attempts.Select(a => a.SubmittedAt.Date)
@@ -211,7 +222,7 @@
         (CurrentStreak, LongestStreak) = ComputeStreaks(activityDates);
 
         var earlyBird = attempts.Any(a => a.SubmittedAt.Hour < 8);
-        var perfectScore = attempts.Any(a => a.Score >= 100);
+        var perfectScore = attempts.Any(a => questionCounts.TryGetValue(a.QuizId, out var t) && t > 0 && a.Score == t);
 
         Achievements = BuildAchievements(attempts.Count, perfectScore, CurrentStreak, LessonsCompletedCount, earlyBird);
 
@@ -220,7 +231,7 @@
         var quizActivity = attempts
             .OrderByDescending(a => a.SubmittedAt)
             .Take(3)
-            .Select(a => new ActivityItem($"Scored {a.Score}% on a quiz", a.SubmittedAt.DateTime));
+            .Select(a => new ActivityItem($"Scored {(int)Math.Round(ToPercent(a))}% on a quiz", a.SubmittedAt.DateTime));
 
         var attendanceActivity = attendances
             .OrderByDescending(a => a.CheckedInAt)

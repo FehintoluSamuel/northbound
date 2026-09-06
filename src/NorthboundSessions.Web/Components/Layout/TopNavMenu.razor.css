@@ -1,0 +1,130 @@
+/* AppLayout.razor.css — scoped to AppLayout's markup.
+   nav.tabbar / nav.nav-links prefixes outrank Bootstrap's plain
+   `a { color }` rule regardless of stylesheet load order. */
+
+
+/* ---------- Top nav ---------- */
+.topnav {
+    background: var(--navy);
+    padding: 14px 0;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+.topnav-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Logo only — no wordmark, per locked design */
+.brand {
+    display: flex;
+    align-items: center;
+}
+
+/* Desktop nav-links removed — bottom tab bar stays fixed and visible
+   on every screen size now, so a duplicate top-nav link set isn't needed. */
+.nav-links {
+    display: none;
+}
+
+nav.nav-links a {
+    color: #C9D2FF;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 6px 2px;
+    border-bottom: 2px solid transparent;
+    transition: color .15s ease, border-color .15s ease;
+}
+
+nav.nav-links a:hover {
+    color: #fff;
+}
+
+nav.nav-links a.active {
+    color: #fff;
+    border-color: var(--spark);
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    position: relative;
+}
+
+.icon-btn svg {
+    stroke: #fff;
+}
+
+.bell-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--spark);
+    border: 1.5px solid var(--navy);
+}
+
+.avatar-ring {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+}
+
+.ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: rotate(-90deg);
+}
+
+.ring-track {
+    stroke: rgba(255, 255, 255, .25);
+}
+
+.ring-progress {
+    stroke: var(--spark);
+    transition: stroke-dashoffset .8s cubic-bezier(.22, 1, .36, 1);
+}
+
+.avatar-fill {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--offwhite);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--navy);
+}
+
+
+
+/* Bottom tab bar now lives in NavMenu.razor / NavMenu.razor.css */
+
+/* Bottom tab bar and top nav are both fixed and visible on every
+   screen size — mobile and desktop alike. No breakpoint swap. */

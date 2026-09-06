@@ -1,0 +1,201 @@
+/* AdminLayout.razor.css — desktop-first sidebar with a mobile drawer
+   fallback below 900px. Selectors prefixed (nav.sidebar a.nav-item) to
+   outrank Bootstrap's plain `a { color }` rule, same pattern used
+   across the student-facing nav components. */
+
+.admin-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.backdrop {
+    display: none;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 14px;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 10px 22px;
+    position: relative;
+}
+
+.sidebar-brand span {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--navy);
+}
+
+.close-btn {
+    display: none;
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.nav-section-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: .4px;
+    padding: 14px 12px 6px;
+    text-transform: uppercase;
+}
+
+.sidebar a.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    border-left: 3px solid transparent;
+    text-decoration: none;
+}
+
+.sidebar a.nav-item svg {
+    stroke: var(--muted);
+    flex-shrink: 0;
+}
+
+.sidebar a.nav-item:hover {
+    background: var(--offwhite);
+}
+
+.sidebar a.nav-item.active {
+    background: var(--navy-tint, #EEF0FB);
+    color: var(--navy);
+    border-left-color: var(--navy);
+}
+
+.sidebar a.nav-item.active svg {
+    stroke: var(--navy);
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid var(--line);
+}
+
+.admin-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.admin-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.admin-role {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+/* ---------- Main content ---------- */
+.main {
+    flex: 1;
+    min-width: 0;
+}
+
+.topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--ink);
+    cursor: pointer;
+    padding: 4px;
+}
+
+.breadcrumb {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.content {
+    padding: 26px 28px;
+}
+
+/* ---------- Mobile fallback (<900px): off-canvas drawer ---------- */
+@media (max-width: 900px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 40;
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 8px 0 24px rgba(21, 26, 43, .12);
+    }
+
+    .close-btn {
+        display: block;
+    }
+
+    .hamburger-btn {
+        display: block;
+    }
+
+    .backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(21, 26, 43, .4);
+        z-index: 35;
+    }
+
+    .content {
+        padding: 20px 16px;
+    }
+
+    .topbar {
+        padding: 12px 16px;
+    }
+}
