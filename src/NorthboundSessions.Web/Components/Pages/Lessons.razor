@@ -12,6 +12,7 @@
 @using NorthboundSessions.Web.Data
 @using NorthboundSessions.Web.Services
 @using NorthboundSessions.Data
+@using Markdig
 @inject NavigationManager Nav
 @attribute [Authorize]
 
@@ -64,7 +65,7 @@ else if (CurrentLesson is not null)
         <section class="section" style="padding-top:0;">
             <div class="slide-card">
                 <div class="slide-viewport">
-                    <p>@Slides[CurrentSlideIndex]</p>
+                    @((MarkupString)Markdig.Markdown.ToHtml(Slides[CurrentSlideIndex]))
                 </div>
                 <div class="slide-controls">
                     <button class="slide-nav-btn" disabled="@(CurrentSlideIndex == 0)" @onclick="GoPrevious">
