@@ -9,3 +9,4 @@ public class QuizQuestion
     public Quiz? Quiz { get; set; }
     public ICollection<QuizOption> Options { get; set; } = new List<QuizOption>();
 }
+

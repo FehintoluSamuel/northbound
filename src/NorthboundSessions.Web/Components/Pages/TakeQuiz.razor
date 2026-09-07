@@ -1,13 +1,15 @@
 @page "/quizzes"
 @rendermode InteractiveServer
 @layout AppLayout
-@attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @using Microsoft.AspNetCore.Components.Authorization
 @inject QuizService QuizService
 @inject NavigationManager Nav
 @using NorthboundSessions.Web.Services
 @using NorthboundSessions.Data
+@attribute [Authorize]
+
 
 <h3>@quiz?.Title</h3>
 

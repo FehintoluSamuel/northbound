@@ -14,6 +14,8 @@ namespace NorthboundSessions.Data
         public int Score {get; set;}
         public DateTimeOffset SubmittedAt {get; set;} = DateTimeOffset.UtcNow;
     }
+
+    
     
 }
 

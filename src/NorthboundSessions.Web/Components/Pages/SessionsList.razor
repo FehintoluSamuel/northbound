@@ -1,6 +1,7 @@
 @page "/all-sessions"
 @rendermode InteractiveServer
 @layout AppLayout
+@using Microsoft.AspNetCore.Authorization
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
@@ -8,6 +9,8 @@
 @using NorthboundSessions.Data
 @using NorthboundSessions.Web.Services
 @using NorthboundSessions.Web.Data
+@attribute [Authorize]
+
 
 
 <div class="container">

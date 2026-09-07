@@ -11,6 +11,10 @@
     --line: #E7E9F2;
     --spark: #16A34A;
     --spark-tint: #E7F6EC;
+    --live: #DC2626;
+    --live-dark: #B91C1C;
+    --live-tint: #FEE2E2;
+    
 
     --fs-display: 28px;
     --fs-h1: 24px;
@@ -22,6 +26,8 @@
     --fs-small: 12px;
     --fs-micro: 10.5px;
 }
+
+
 
 [data-theme="dark"] {
     --white: #12141C;

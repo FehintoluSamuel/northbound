@@ -1,6 +1,7 @@
 @page "/quizzes/{QuizId:int}/take"
 @rendermode InteractiveServer
 @layout AppLayout
+@using Microsoft.AspNetCore.Authorization
 @using NorthboundSessions.Web.Services
 @using NorthboundSessions.Data
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
@@ -9,6 +10,8 @@
 @inject NavigationManager Nav
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Web.Data
+@attribute [Authorize]
+
 
 
 @if (QuizNotFound)

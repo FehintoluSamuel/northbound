@@ -1,0 +1,93 @@
+@page "/profile"
+@rendermode InteractiveServer
+@layout AppLayout
+@using Microsoft.AspNetCore.Authorization
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Data
+@using NorthboundSessions.Web.Services
+@inject NavigationManager Nav
+@using NorthboundSessions.Web.Data
+@attribute [Authorize]
+
+
+<div class="container">
+    <div class="profile-header">
+        <div class="profile-avatar">@Initials</div>
+        <div>
+            <h1>@DisplayName</h1>
+            <p class="text-small">@Email</p>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="section-head"><h2>Your activity</h2></div>
+        <div class="metric-row">
+            <div class="metric"><div class="metric-num text-stat">@LessonsCompletedCount</div><div class="text-small">Lessons completed</div></div>
+            <div class="metric"><div class="metric-num text-stat">@(AverageQuizScore is null ? "—" : $"{AverageQuizScore:0}%")</div><div class="text-small">Average quiz score</div></div>
+            <div class="metric"><div class="metric-num text-stat">@SessionsAttendedCount</div><div class="text-small">Sessions attended</div></div>
+        </div>
+    </section>
+
+    <section class="section">
+        <!-- Standard ASP.NET Core Identity logout pattern — a plain HTML
+             form POSTing to the Account/Logout endpoint with an
+             antiforgery token, NOT a Blazor @onclick. Sign-out has to go
+             through the non-interactive endpoint because of how the
+             auth cookie is cleared in server-rendered Blazor apps. -->
+        <form action="Account/Logout" method="post">
+            <AntiforgeryToken />
+            <input type="hidden" name="ReturnUrl" value="/" />
+            <button type="submit" class="logout-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>
+                Log out
+            </button>
+        </form>
+    </section>
+</div>
+
+@code {
+    private string DisplayName = "Student";
+    private string Email = string.Empty;
+    private string Initials = "?";
+    private int LessonsCompletedCount;
+    private double? AverageQuizScore;
+    private int SessionsAttendedCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var studentId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        Email = user.Identity?.Name ?? string.Empty;
+        var localPart = Email.Contains('@') ? Email[..Email.IndexOf('@')] : Email;
+        DisplayName = localPart; // no display-name field exists yet, per the handoff
+        Initials = localPart.Length >= 2
+            ? localPart[..2].ToUpperInvariant()
+            : localPart.ToUpperInvariant().PadRight(2, '?');
+
+        if (string.IsNullOrEmpty(studentId)) return;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        var attempts = await db.QuizAttempts.Where(a => a.StudentId == studentId).ToListAsync();
+        SessionsAttendedCount = await db.Attendances.CountAsync(a => a.StudentId == studentId);
+        LessonsCompletedCount = attempts.Select(a => a.QuizId).Distinct().Count();
+
+        if (attempts.Count > 0)
+        {
+            var quizIds = attempts.Select(a => a.QuizId).Distinct().ToList();
+            var questionCounts = await db.QuizQuestions
+                .Where(q => quizIds.Contains(q.QuizId))
+                .GroupBy(q => q.QuizId)
+                .Select(g => new { QuizId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.QuizId, x => x.Count);
+
+            AverageQuizScore = attempts.Average(a =>
+                questionCounts.TryGetValue(a.QuizId, out var total) && total > 0
+                    ? a.Score * 100.0 / total : 0);
+        }
+    }
+}

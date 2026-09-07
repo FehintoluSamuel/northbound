@@ -1,6 +1,7 @@
 @page "/sessions/{LiveSessionId:int}/checkin"
 @rendermode InteractiveServer
 @layout AppLayout
+@using Microsoft.AspNetCore.Authorization
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @inject AttendanceService AttendanceService
@@ -9,6 +10,8 @@
 @using NorthboundSessions.Web.Services
 @using NorthboundSessions.Data
 @using NorthboundSessions.Web.Data
+@attribute [Authorize]
+
 
 
 

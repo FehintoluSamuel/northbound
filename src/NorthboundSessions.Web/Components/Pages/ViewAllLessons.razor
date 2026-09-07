@@ -1,7 +1,6 @@
 @page "/view-all-lessons"
 @rendermode InteractiveServer
 @layout AppLayout
-@attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Data
@@ -9,6 +8,8 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
 @using NorthboundSessions.Web.Data
+@attribute [Authorize]
+
 
 
 
