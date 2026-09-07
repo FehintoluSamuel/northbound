@@ -1,7 +1,7 @@
 @page "/admin/topics/create"
 @using Microsoft.AspNetCore.Authorization
 @rendermode InteractiveServer
-@layout AppLayout
+@layout AdminLayout
 @using NorthboundSessions.Web
 @attribute [Authorize(Roles = "Instructor")]
 @using Microsoft.EntityFrameworkCore
@@ -9,6 +9,7 @@
 @using NorthboundSessions.Web.Data
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager Nav
+
 
 <h3>Add a topic to the bank</h3>
 
