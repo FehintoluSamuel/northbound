@@ -18,7 +18,7 @@ namespace NorthboundSessions.Web.Services
             {
                 return slides;
             }
-            var paragraphs = lesson.OutlineContent.Split("\n\n", StringSplitOptions.RemoveEmptyEntries);
+            var paragraphs = lesson.OutlineContent.Split("\n\n\n", StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < paragraphs.Length; i++)
             {
                 var slideDisplay = new Slide{SlideNumber = i + 1, Title = i ==0? lesson.Title : $"{lesson.Title} (continued)", BodyText = paragraphs[i]};

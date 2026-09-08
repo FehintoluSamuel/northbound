@@ -1,16 +1,18 @@
 @page "/admin/lessons/create"
 @rendermode InteractiveServer
 @layout AdminLayout
+@using Microsoft.AspNetCore.Authorization
+@using NorthboundSessions.Data
+@using Microsoft.EntityFrameworkCore
+@using NorthboundSessions.Web.Data
+@using NorthboundSessions.Web.Services
 @attribute [Authorize(Roles = "Instructor")]
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager Nav
-@using Microsoft.AspNetCore.Authorization
 @using NorthboundSessions.Data
-@inject AuthenticationStateProvider AuthStateProvider
-@using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Authorization
-@using NorthboundSessions.Web.Data
-@using NorthboundSessions.Web.Services
+
+
+
 
 
 <div class="page-title-row"><h1>Create lesson</h1></div>
@@ -83,9 +85,11 @@
                 var option = question.Options[optionIndex];
 
                 <div class="option-row">
-                    <input type="radio" name="@($"correct-{questionIndex}")"
-                           checked="@option.IsCorrect"
-                           @onchange="() => SetCorrectOption(questionIndex, optionIndex)" />
+                    <button type="button" class="correct-toggle @(option.IsCorrect ? "is-correct" : "")"
+                            @onclick="() => SetCorrectOption(questionIndex, optionIndex)">
+                        <span class="correct-dot"></span>
+                        Correct
+                    </button>
                     <input class="text-input option-text" @bind="option.Text" placeholder="@($"Option {optionIndex + 1}")" />
                     @if (question.Options.Count > 2)
                     {

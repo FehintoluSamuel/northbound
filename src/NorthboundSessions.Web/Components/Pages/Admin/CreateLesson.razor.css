@@ -86,7 +86,38 @@
     gap: 10px;
     margin-top: 8px;
 }
-.option-row input[type="radio"] { flex-shrink: 0; accent-color: var(--spark); width: 16px; height: 16px; }
+.correct-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    background: #fff;
+    border: 1.5px solid var(--line);
+    color: var(--muted);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.correct-toggle:hover { border-color: var(--spark); }
+.correct-toggle .correct-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--muted);
+    flex-shrink: 0;
+}
+.correct-toggle.is-correct {
+    background: var(--spark-tint);
+    border-color: var(--spark);
+    color: var(--spark);
+}
+.correct-toggle.is-correct .correct-dot {
+    background: var(--spark);
+    border-color: var(--spark);
+}
 .option-text { flex: 1; }
 .remove-option-btn {
     background: none; border: none; color: var(--muted); cursor: pointer;
