@@ -10,54 +10,65 @@
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager Nav
 
-
-<h3>Add a topic to the bank</h3>
+<div class="page-title-row"><h1>Add a topic to the bank</h1></div>
+<div class="page-sub">Reusable lesson material for LessonGeneratorService to draw from on scheduled days.</div>
 
 <EditForm Model="this" FormName="CreateTopic" OnValidSubmit="SaveTopic">
-    <label>Title</label>
-    <InputText @bind-Value="newTopic.Title" />
 
-    <label>Outline Content</label>
-    <InputTextArea @bind-Value="newTopic.OutlineContent" rows="6" />
+    <div class="form-card">
+        <h2>Topic details</h2>
 
-    <label>Market Symbol (optional, e.g. NYSE:NKE)</label>
-    <InputText @bind-Value="newTopic.MarketSymbol" />
+        <label class="field-label">Title</label>
+        <InputText @bind-Value="newTopic.Title" class="text-input" />
 
-    <label>Lesson image (optional, 16:9 works best, e.g. 800×450)</label>
-    <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg" />
+        <label class="field-label">Outline content</label>
+        <InputTextArea @bind-Value="newTopic.OutlineContent" rows="6" class="text-area" />
 
-    @if (imagePreviewUrl is not null)
-    {
-        <img src="@imagePreviewUrl" style="max-width:300px; display:block; margin-top:10px;" />
-    }
+        <label class="field-label">Market symbol <span class="optional">(optional, e.g. NYSE:NKE)</span></label>
+        <InputText @bind-Value="newTopic.MarketSymbol" class="text-input" />
 
-    <hr />
-    <h4>Quiz Questions</h4>
-
-    @foreach (var question in newTopic.Questions)
-    {
-        <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-            <label>Question text</label>
-            <InputText @bind-Value="question.QuestionText" />
-
-            <h5>Options</h5>
-            @foreach (var option in question.Options)
+        <label class="field-label">Lesson image <span class="optional">(optional, 16:9 works best, e.g. 800×450)</span></label>
+        <div class="image-upload-row">
+            <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg" class="file-input" />
+            @if (imagePreviewUrl is not null)
             {
-                <div>
-                    <InputText @bind-Value="option.OptionText" placeholder="Option text" />
-                    <label>
-                        <InputCheckbox @bind-Value="option.IsCorrect" /> Correct answer
-                    </label>
-                </div>
+                <img src="@imagePreviewUrl" class="image-preview" alt="" />
             }
-            <button type="button" @onclick="() => AddOption(question)">+ Add option</button>
         </div>
-    }
-    
-    <button type="button" @onclick="AddQuestion">+ Add question</button>
+    </div>
 
-    <hr />
-    <button type="submit">Save topic</button>
+    <div class="form-card">
+        <div class="section-head-row">
+            <h2>Quiz questions</h2>
+        </div>
+
+        @foreach (var question in newTopic.Questions)
+        {
+            <div class="question-block">
+                <label class="field-label">Question text</label>
+                <InputText @bind-Value="question.QuestionText" class="text-input" />
+
+                <div class="options-label">Options</div>
+                @foreach (var option in question.Options)
+                {
+                    <div class="option-row">
+                        <InputText @bind-Value="option.OptionText" placeholder="Option text" class="text-input option-text" />
+                        <label class="correct-checkbox-label">
+                            <InputCheckbox @bind-Value="option.IsCorrect" />
+                            Correct
+                        </label>
+                    </div>
+                }
+                <button type="button" class="add-option-btn" @onclick="() => AddOption(question)">+ Add option</button>
+            </div>
+        }
+        <button type="button" class="add-question-btn" @onclick="AddQuestion">+ Add question</button>
+    </div>
+
+    <div class="submit-row">
+        <button type="submit" class="btn-primary">Save topic</button>
+    </div>
+
 </EditForm>
 
 @code {
