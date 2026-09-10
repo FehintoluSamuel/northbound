@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 var builder = Host.CreateApplicationBuilder(args); 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string not found."); 
 
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())); 
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())); 
 builder.Services.AddScoped<LessonGeneratorService>(); 
 builder.Services.AddScoped<EmailService>(); 
 

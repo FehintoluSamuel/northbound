@@ -16,9 +16,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Azure Container Apps lets you configure the target port directly in the
-# ingress settings (unlike Render, which injects PORT at runtime) — so we
-# can just fix it here.
-ENV ASPNETCORE_URLS=http://+:8080
+# Render injects PORT at container start (not build time), unlike Azure
+# Container Apps which let us configure a fixed target port — so we
+# resolve it via a shell at runtime instead.
+ENV PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "NorthboundSessions.Web.dll"]
+ENTRYPOINT ["/bin/sh", "-c", "dotnet NorthboundSessions.Web.dll --urls http://+:${PORT}"]

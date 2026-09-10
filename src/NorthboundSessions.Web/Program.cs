@@ -51,10 +51,10 @@ Console.WriteLine($"Connection string starts with: {connectionString.Substring(0
 Console.WriteLine("======================");
 
 /*builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())); */
+    options.UseNpgsql(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())); */
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
+    options.UseNpgsql(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddScoped<QuizService>();
 builder.Services.AddScoped<AttendanceService>();
