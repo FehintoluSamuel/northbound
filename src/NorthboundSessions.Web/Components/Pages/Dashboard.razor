@@ -58,7 +58,15 @@
         <section class="section" aria-labelledby="h-continue">
             <div class="section-head"><h2 id="h-continue">Continue learning</h2></div>
             <div class="lesson-card">
-                <img class="lesson-thumb" src="@($"/images/lessons/{NextLesson.Id}.jpg")"
+                @* Lesson images are stored as byte[] on the Lesson row, not as
+                   files under wwwroot. The old src was "/images/lessons/{id}.jpg",
+                   which matched no static file: it fell through to the Blazor
+                   router, 302'd to the login page and returned HTML, so the <img>
+                   failed to decode and onerror replaced it with the default —
+                   the uploaded image never showed. The endpoint below returns the
+                   bytes, and itself redirects to the default when a lesson has
+                   no image, so onerror is now only a last-resort safety net. *@
+                <img class="lesson-thumb" src="@($"/api/lessons/{NextLesson.Id}/image")"
                      width="700" height="466" loading="lazy" decoding="async"
                      onerror="this.onerror=null;this.src='/images/lessons/continue_learning_default.jpg';" alt="" />
                 <div class="lesson-body">

@@ -49,6 +49,15 @@
         This lesson has a live session today
     </label>
 
+    <label class="field-label">Lesson image <span class="optional">(optional, 16:9 works best, e.g. 800×450)</span></label>
+    <div class="image-upload-row">
+        <InputFile OnChange="HandleImageSelected" accept="image/png,image/jpeg" class="file-input" />
+        @if (imagePreviewUrl is not null)
+        {
+            <img src="@imagePreviewUrl" class="image-preview" alt="" />
+        }
+    </div>
+
     <label class="field-label">Lesson content <span class="optional">(Markdown)</span></label>
     <textarea class="text-area" rows="10" @bind="OutlineContent"
               placeholder="Write the lesson in Markdown — rendering is handled automatically."></textarea>
@@ -119,6 +128,8 @@
     private string? MarketSymbol;
     private bool IsLiveDay;
     private string OutlineContent = string.Empty;
+    private byte[]? LessonImageBytes;
+    private string? imagePreviewUrl;
 
     private string QuizTitle = string.Empty;
     private List<QuestionForm> Questions = new() { NewQuestion() };
@@ -200,7 +211,8 @@
                 OutlineContent = OutlineContent,
                 MarketSymbol = string.IsNullOrWhiteSpace(MarketSymbol) ? null : MarketSymbol,
                 ReleaseDate = DateOnly.FromDateTime(ReleaseDateInput),
-                IsLiveDay = IsLiveDay
+                IsLiveDay = IsLiveDay,
+                ImageBytes = LessonImageBytes
             };
             db.Lessons.Add(lesson);
             await db.SaveChangesAsync(); // populates lesson.Id
@@ -255,6 +267,17 @@
         }
     }
 
+    private async Task HandleImageSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024); // 5MB cap
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+
+        LessonImageBytes = memoryStream.ToArray();
+        imagePreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(LessonImageBytes)}";
+    }
+
     private void ResetForm()
     {
         Title = string.Empty;
@@ -264,5 +287,7 @@
         QuizTitle = string.Empty;
         ReleaseDateInput = DateTime.Today;
         Questions = new() { NewQuestion() };
+        LessonImageBytes = null;
+        imagePreviewUrl = null;
     }
 }
