@@ -6,7 +6,7 @@
     left: 0;
     right: 0;
     width: 100%;
-    background: var(--white);
+    background: var(--card);
     border-top: 1px solid var(--line);
     display: flex;
     justify-content: space-around;
@@ -36,10 +36,23 @@ nav.tabbar a.tab svg {
 }
 
 nav.tabbar a.tab.active {
-    color: var(--navy);
-    background: var(--offwhite);
+    color: var(--brand-text);
+    background: var(--surface);
 }
 
 nav.tabbar a.tab.active svg {
-    stroke: var(--navy);
+    stroke: var(--brand-text);
+}
+
+nav.tabbar a.tab:focus-visible {
+    outline: 2px solid var(--brand-text);
+    outline-offset: -2px;
+}
+
+/* Desktop keeps the text nav in the top bar instead, so hide the tab bar
+   and drop the main content's reserved bottom padding to match. */
+@media (min-width: 900px) {
+    .tabbar {
+        display: none;
+    }
 }

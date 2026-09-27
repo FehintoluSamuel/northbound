@@ -31,7 +31,7 @@
 }
 
 .hero-eyebrow {
-    color: #C9D2FF;
+    color: var(--on-brand-muted);
     font-size: var(--fs-micro);
     font-weight: 600;
     letter-spacing: .3px;
@@ -39,7 +39,7 @@
 }
 
 .hero h1 {
-    color: #fff;
+    color: var(--on-brand);
     font-size: var(--fs-display);
     line-height: 1.15;
     letter-spacing: -.3px;
@@ -47,7 +47,7 @@
 }
 
 .hero p {
-    color: #E7DEFB;
+    color: var(--on-brand-subtle);
     font-size: var(--fs-body-lg);
     line-height: 1.6;
     margin: 0 0 18px;
@@ -57,27 +57,17 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #fff;
-    color: var(--navy);
+    background: var(--card);
+    color: var(--brand-text);
     padding: 12px 20px;
     border-radius: 8px;
     font-weight: 700;
     font-size: 14px;
 }
 
-.container {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.section {
-    padding: 24px 0;
-}
-
-.section-head h2 {
-    font-size: var(--fs-h2);
-}
+/* Dashboard.razor.css — page-specific rules only.
+   The shared list/page primitives (.container, .section, .section-head h2,
+   .empty-state) live once in wwwroot/css/site-theme.css. */
 
 h2 {
     font-size: var(--fs-h2);
@@ -111,33 +101,27 @@ h2 {
     gap: 12px;
 }
 
-.flame-icon {
+/* Streak flame is now an inline SVG icon (was a 22px PNG). */
+.streak-icon {
     width: 42px;
     height: 42px;
+    flex-shrink: 0;
     border-radius: 50%;
-    background: var(--offwhite);
+    background: var(--spark-tint);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--muted);
-    transition: background .2s ease, color .2s ease;
-}
-
-.flame-icon svg {
-    stroke: currentColor;
-}
-
-.flame-icon.lit {
-    background: var(--spark-tint);
     color: var(--spark);
 }
+
+.streak-icon svg { stroke: currentColor; }
 
 /* ---------- Generated lesson thumbnail (no photo required) ---------- */
 .lesson-card {
     border: 1px solid var(--line);
     border-radius: 12px;
     overflow: hidden;
-    background: var(--white);
+    background: var(--card);
 }
 
 /* ---------- Lesson thumbnail (real photo, backend-supplied) ---------- */
@@ -145,12 +129,12 @@ h2 {
     width: 100%;
     height: 140px;
     object-fit: cover;
-    background: var(--offwhite);
+    background: var(--surface);
     display: block;
 }
 
 .lesson-thumb-generated .ticker {
-    color: #fff;
+    color: var(--on-brand);
     font-family: 'Source Serif 4', serif;
     font-weight: 700;
     font-size: 20px;
@@ -168,25 +152,36 @@ h2 {
 
 
 .lesson-card,
-.session-card,
-.activity {
+.session-card {
     border: 1px solid var(--line);
     border-radius: 12px;
-    background: var(--white);
-    box-shadow: 0 1px 2px rgba(21, 26, 43, 0.04), 0 1px 3px rgba(21, 26, 43, 0.06);
+    background: var(--card);
+    box-shadow: var(--shadow-sm);
     transition: box-shadow .2s ease, transform .2s ease;
+}
+
+/* .activity is a <ul> now — reset list styling. */
+.activity {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
 }
 
 .lesson-card:hover,
 .session-card:hover {
-    box-shadow: 0 4px 12px rgba(21, 26, 43, 0.08), 0 2px 4px rgba(21, 26, 43, 0.06);
+    box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
 
 .lesson-card:active,
 .session-card:active {
     transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(21, 26, 43, 0.06);
+    box-shadow: var(--shadow-sm);
 }
 
 
@@ -194,8 +189,8 @@ h2 {
 .resume-btn {
     display: inline-block;
     margin-top: 10px;
-    background: var(--navy);
-    color: #fff;
+    background: var(--brand);
+    color: var(--on-brand);
     padding: 10px 18px;
     border-radius: 8px;
     font-size: 13.5px;
@@ -226,7 +221,7 @@ h2 {
     display: flex;
     align-items: center;
     gap: 16px;
-    background: var(--white);
+    background: var(--card);
 }
 
 .session-photo {
@@ -234,7 +229,7 @@ h2 {
     height: 56px;
     border-radius: 50%;
     object-fit: cover;
-    background: var(--offwhite);
+    background: var(--surface);
     flex-shrink: 0;
 }
 
@@ -247,8 +242,8 @@ h2 {
 }
 
 .join-btn {
-    background: var(--navy);
-    color: #fff;
+    background: var(--brand);
+    color: var(--on-brand);
     padding: 10px 16px;
     border-radius: 8px;
     font-size: 12.5px;
@@ -256,74 +251,95 @@ h2 {
     white-space: nowrap;
 }
 
-.empty-state {
-    border: 1px dashed var(--line);
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    color: var(--muted);
-}
-
-/* ---------- Achievements — horizontal scroll, real color states ---------- */
-.badge-scroll {
+/* ---------- Achievements ---------- */
+/* Replaces the old 2-state badge (green/grey). Badges are now tiered
+   bronze/silver/gold via the --tier-* tokens, and locked badges show
+   real progress toward their goal. */
+.ach-summary {
     display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    padding: 4px 4px 10px;
-    -webkit-overflow-scrolling: touch;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
 }
 
-.badge {
-    flex: 0 0 auto;
-    width: 74px;
-    text-align: center;
+.ach-summary-num { font-size: 26px; }
+
+.ach-summary-bar {
+    flex: 1 1 100%;
+    height: 6px;
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    margin-top: 8px;
 }
 
-.badge-circle {
-    width: 58px;
-    height: 58px;
+.ach-summary-bar span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--tier-bronze), var(--tier-gold));
+    border-radius: inherit;
+    transition: width .4s var(--ease);
+}
+
+/* "Closest to completion" strip */
+.ach-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+}
+
+.ach-strip-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+}
+
+.ach-strip-icon {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
     border-radius: 50%;
-    margin: 0 auto 8px;
-    background: var(--offwhite);
-    border: 2px solid var(--line);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), border-color .2s ease, background .2s ease;
-}
-
-.badge-circle svg {
-    width: 24px;
-    height: 24px;
-    stroke: var(--muted);
-    transition: stroke .2s ease;
-}
-
-.badge:hover .badge-circle {
-    transform: translateY(-3px) scale(1.06);
-}
-
-/* Unlocked = green. Locked = grey. This is the actual color-state fix —
-   the previous locked color (#C7CBD9) was too pale to read as "grey"
-   against the off-white circle, it just looked broken/missing. */
-.badge.unlocked .badge-circle {
-    background: var(--spark-tint);
-    border-color: var(--spark);
-}
-
-.badge.unlocked .badge-circle svg {
-    stroke: var(--spark);
-}
-
-.badge-name {
-    line-height: 1.3;
+    background: var(--surface);
+    border: 1.5px solid var(--line);
     color: var(--muted);
 }
 
-.badge.unlocked .badge-name {
+.ach-strip-icon.tier-bronze { color: var(--tier-bronze); }
+.ach-strip-icon.tier-silver { color: var(--tier-silver); }
+.ach-strip-icon.tier-gold   { color: var(--tier-gold); }
+
+.ach-strip-body { min-width: 0; }
+.ach-strip-name {
+    font-size: var(--fs-small);
+    font-weight: 600;
     color: var(--ink);
-    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
+.section-link {
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--brand-text);
+    margin-left: auto;
+}
+
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 /* ---------- Metrics ---------- */
 .metric-row {
     display: grid;
@@ -347,7 +363,7 @@ h2 {
     border: 1px solid var(--line);
     border-radius: 12px;
     overflow: hidden;
-    background: var(--white);
+    background: var(--card);
 }
 
 .activity-item {
@@ -356,7 +372,11 @@ h2 {
     gap: 13px;
     padding: 14px 16px;
     border-bottom: 1px solid var(--line);
+    color: inherit;
+    transition: background .15s ease;
 }
+
+.activity-item:hover { background: var(--surface); }
 
 .activity-item:last-child {
     border-bottom: none;
@@ -387,16 +407,33 @@ h2 {
 }
 
 .metric:hover {
-    border-color: var(--navy);
-    background: var(--offwhite);
+    border-color: var(--brand);
+    background: var(--surface);
 }
 
-.activity-item {
-    text-decoration: none;
-    color: inherit;
-    transition: background .15s ease;
-}
+/* ---------- Responsive ---------- */
+/* Mobile-first: the hero, stat row and action buttons all collapse. */
+@media (max-width: 720px) {
+    .hero { min-height: 220px; }
 
-.activity-item:hover {
-    background: var(--offwhite);
+    .hero-eyebrow { font-size: 11px; }
+
+    .metric-row { grid-template-columns: 1fr; }
+
+    .streak-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .lesson-card,
+    .session-card {
+        flex-direction: column;
+    }
+
+    .session-card .join-btn,
+    .resume-btn {
+        width: 100%;
+        text-align: center;
+    }
 }

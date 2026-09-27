@@ -6,20 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <ResourcePreloader />
-    <link rel="stylesheet" href="@Assets["css/admin-forms.css"]" />
+    @* Order matters: vendor base, then overrides, then design tokens last so
+       its :root block and base element styles win. admin-forms.css previously
+       loaded *before* Bootstrap, so Bootstrap's rules silently replaced it. *@
     <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
+    <link rel="stylesheet" href="@Assets["css/admin-forms.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="@Assets["css/site-theme.css"]" />
     <link rel="stylesheet" href="@Assets["NorthboundSessions.Web.styles.css"]" />
     <ImportMap />
-    <link rel="icon" type="image/jpg" href="NorthboundSessions_faviocon.jpg" />
+    <link rel="icon" type="image/jpeg" href="NorthboundSessions_faviocon.jpg" />
     <HeadOutlet />
+    @* Applied before first paint so the dark theme never flashes light. *@
     <script>
         (function () {
-            var t = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', t);
+            try {
+                // Same fallback order as wwwroot/index.html and js/theme.js:
+                // explicit choice wins, otherwise follow the OS preference.
+                var stored = localStorage.getItem('theme');
+                var t = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { /* private mode — fall back to light */ }
         })();
     </script>
     <script src="js/theme.js"></script>
@@ -31,8 +41,14 @@
 <Routes />
     <ReconnectModal />
 
+    <div id="blazor-error-ui" data-nosnippet>
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
 
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="js/admin-nav.js"></script>
     <script src="@Assets["Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
 </body>
 

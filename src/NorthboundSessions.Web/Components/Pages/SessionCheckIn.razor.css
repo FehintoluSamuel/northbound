@@ -13,7 +13,7 @@
 }
 
 .back-link:hover {
-    color: var(--navy);
+    color: var(--brand-text);
 }
 
 .container {
@@ -31,8 +31,8 @@
     width: 60px;
     height: 60px;
     border-radius: 14px;
-    background: var(--navy);
-    color: #fff;
+    background: var(--brand);
+    color: var(--on-brand);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -49,7 +49,7 @@
 .session-date-lg .m {
     font-size: 10px;
     letter-spacing: .3px;
-    color: #B7C0FA;
+    color: var(--on-brand-muted);
     margin-top: 2px;
 }
 
@@ -91,27 +91,27 @@
 }
 
 .btn-primary.full {
-    background: var(--navy);
-    color: #fff;
+    background: var(--brand);
+    color: var(--on-brand);
     border: none;
 }
 
 .btn-primary.full:hover:not([disabled]) {
-    background: var(--navy-dark);
+    background: var(--brand-hover);
 }
 
 .btn-primary.full[disabled] {
-    background: var(--offwhite);
+    background: var(--surface);
     color: var(--muted);
     cursor: not-allowed;
 }
 
 .btn-outline.full {
-    background: #fff;
-    color: var(--navy);
+    background: var(--card);
+    color: var(--brand-text);
     border: 1.5px solid var(--line);
 }
 
 .btn-outline.full:hover {
-    border-color: var(--navy);
+    border-color: var(--brand);
 }

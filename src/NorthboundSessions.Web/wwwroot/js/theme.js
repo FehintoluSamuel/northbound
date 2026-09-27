@@ -1,17 +1,26 @@
-// theme.js — dark/light mode, defaults to light unless the user toggled before.
+// theme.js — dark/light mode. An explicit choice always wins; with no stored
+// choice we follow the OS preference. wwwroot/index.html and the inline
+// pre-paint script in App.razor use the same 'theme' key and the same order,
+// so the marketing page and the app never disagree.
+function resolveTheme() {
+    var stored = null;
+    try { stored = localStorage.getItem('theme'); } catch (e) { stored = null; }
+    if (stored === 'dark' || stored === 'light') return stored;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+
 window.themeInterop = {
     getTheme: function () {
-        return localStorage.getItem('theme') || 'light';
+        return resolveTheme();
     },
     setTheme: function (theme) {
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+        try { localStorage.setItem('theme', theme); } catch (e) { /* private mode */ }
     }
 };
 
 function applyStoredTheme() {
-    const theme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-theme', resolveTheme());
 }
 
 // Re-apply the theme after every Blazor "enhanced navigation" — these are

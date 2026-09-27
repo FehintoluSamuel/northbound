@@ -1,5 +1,33 @@
 @page "/not-found"
-@layout MainLayout
+@layout AppLayout
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
 
-<h3>Not Found</h3>
-<p>Sorry, the content you are looking for does not exist.</p>
+<PageTitle>Page not found · Northbound</PageTitle>
+
+<div class="container">
+    <div class="page-head">
+        <h1 class="text-body">Page not found</h1>
+        <p class="text-small">We couldn't find that page. It may have moved, or the link may be out of date.</p>
+    </div>
+
+    <div class="empty-state">
+        <div class="status-icon missed" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+        </div>
+        <div class="list-body">
+            <div class="list-title text-body">Error 404</div>
+            <div class="text-small">The page you requested doesn't exist.</div>
+        </div>
+    </div>
+
+    <div class="btn-row">
+        <a class="btn btn-primary" href="/dashboard">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" /></svg>
+            Back to dashboard
+        </a>
+        <a class="btn btn-secondary" href="/view-all-lessons">Browse lessons</a>
+    </div>
+</div>

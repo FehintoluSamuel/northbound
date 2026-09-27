@@ -6,7 +6,6 @@
 @using NorthboundSessions.Data
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
-@inject NavigationManager Nav
 @using NorthboundSessions.Web.Data
 @attribute [Authorize]
 
@@ -24,15 +23,15 @@
             <div class="list">
                 @foreach (var item in Completed)
                 {
-                    <div class="list-item" @onclick="() => GoToLesson(item.Id)">
-                        <div class="status-icon done">
+                    <a class="list-item" href="@($"/lessons/{item.Id}")">
+                        <span class="status-icon done" aria-hidden="true">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5" /></svg>
-                        </div>
-                        <div class="list-body">
-                            <div class="list-title text-body">@item.Title</div>
-                            <div class="text-small">Released @item.ReleaseDate.ToString("MMM d")</div>
-                        </div>
-                    </div>
+                        </span>
+                        <span class="list-body">
+                            <span class="list-title text-body">@item.Title</span>
+                            <span class="text-small">Released @item.ReleaseDate.ToString("MMM d")</span>
+                        </span>
+                    </a>
                 }
             </div>
         </section>
@@ -49,15 +48,15 @@
             <div class="list">
                 @foreach (var item in Available)
                 {
-                    <div class="list-item" @onclick="() => GoToLesson(item.Id)">
-                        <div class="status-icon pending">
+                    <a class="list-item" href="@($"/lessons/{item.Id}")">
+                        <span class="status-icon pending" aria-hidden="true">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" /></svg>
-                        </div>
-                        <div class="list-body">
-                            <div class="list-title text-body">@item.Title</div>
-                            <div class="text-small">Released @item.ReleaseDate.ToString("MMM d")@(item.IsLiveDay ? " · live session day" : "")</div>
-                        </div>
-                    </div>
+                        </span>
+                        <span class="list-body">
+                            <span class="list-title text-body">@item.Title</span>
+                            <span class="text-small">Released @item.ReleaseDate.ToString("MMM d")@(item.IsLiveDay ? " · live session day" : "")</span>
+                        </span>
+                    </a>
                 }
             </div>
         }
@@ -111,6 +110,4 @@
             else Available.Add(row);
         }
     }
-
-    private void GoToLesson(int lessonId) => Nav.NavigateTo($"/lessons/{lessonId}");
 }

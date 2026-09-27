@@ -23,8 +23,15 @@ docs/
 .github/workflows/
   ci.yml                      # Build + test on every push/PR
 Dockerfile
-docker-compose.yml            # Local SQL Server, mirrors Azure SQL in production
+docker-compose.yml            # Local PostgreSQL, matches the app's Npgsql provider
 ```
+
+## Database
+
+The app uses **PostgreSQL** via the Npgsql EF Core provider
+(`UseNpgsql` in `Program.cs`), and the checked-in migrations in
+`src/NorthboundSessions.Web/Migrations` are Postgres migrations. `docker compose`
+brings up a matching PostgreSQL 17 instance on port `5432`.
 
 ## Running locally
 
@@ -35,10 +42,21 @@ docker-compose.yml            # Local SQL Server, mirrors Azure SQL in productio
    ```
    cd src/NorthboundSessions.Web
    dotnet user-secrets init
-   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=northbound_dev;User Id=sa;Password=LocalDevPassword1!;TrustServerCertificate=True"
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=northbound_dev;Username=northbound;Password=LocalDevPassword1!"
    ```
 4. Apply migrations: `dotnet ef database update`
 5. Run the app: `dotnet run`
+
+### Granting the Instructor role
+
+Nothing is granted automatically on boot. To give an account the `Instructor`
+role (needed for `/admin/*`), list its email(s):
+```
+dotnet user-secrets set "Northbound:InstructorEmails:0" "you@example.com"
+```
+The app creates the role if it's missing and assigns it on the next start,
+logging what it did. Addresses that have no matching user are logged as a
+warning and skipped.
 
 ## CI/CD
 

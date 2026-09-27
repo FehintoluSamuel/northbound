@@ -10,7 +10,7 @@
 
 /* ---------- Top nav ---------- */
 .topnav {
-    background: var(--navy);
+    background: var(--brand);
     padding: 14px 0;
     position: sticky;
     top: 0;
@@ -39,7 +39,7 @@
 }
 
 nav.nav-links a {
-    color: #C9D2FF;
+    color: var(--on-brand-muted);
     font-family: 'Inter', sans-serif;
     font-size: 13.5px;
     font-weight: 600;
@@ -50,11 +50,11 @@ nav.nav-links a {
 }
 
 nav.nav-links a:hover {
-    color: #fff;
+    color: var(--on-brand);
 }
 
 nav.nav-links a.active {
-    color: #fff;
+    color: var(--on-brand);
     border-color: var(--spark);
 }
 
@@ -74,7 +74,7 @@ nav.nav-links a.active {
 }
 
 .icon-btn svg {
-    stroke: #fff;
+    stroke: var(--on-brand);
 }
 
 .bell-dot {
@@ -85,7 +85,7 @@ nav.nav-links a.active {
     height: 8px;
     border-radius: 50%;
     background: var(--spark);
-    border: 1.5px solid var(--navy);
+    border: 1.5px solid var(--brand);
 }
 
 .avatar-ring {
@@ -118,13 +118,13 @@ nav.nav-links a.active {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: var(--offwhite);
+    background: var(--surface);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 11px;
     font-weight: 700;
-    color: var(--navy);
+    color: var(--brand-text);
 }
 
 /* ---------- Main content ---------- */
@@ -135,7 +135,12 @@ nav.nav-links a.active {
 
 /* Bottom tab bar now lives in NavMenu.razor / NavMenu.razor.css */
 
-/* Bottom tab bar and top nav are both fixed and visible on every
-   screen size — mobile and desktop alike. No breakpoint swap. */
+/* >=900px the tab bar is hidden and TopNavMenu shows text links, so the
+   reserved bottom padding is no longer needed. */
+@media (min-width: 900px) {
+    .app-main {
+        padding-bottom: 0;
+    }
+}
 
 

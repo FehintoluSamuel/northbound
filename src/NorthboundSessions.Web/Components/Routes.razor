@@ -1,11 +1,16 @@
 ﻿@using NorthboundSessions.Web.Components.Account.Shared
 <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
-        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.AppLayout)">
             <NotAuthorized>
                 <RedirectToLogin />
             </NotAuthorized>
         </AuthorizeRouteView>
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        @* FocusOnNavigate has exactly two settable parameters: RouteData and
+           Selector (verified by reflection against .NET 10). There is no
+           "First" parameter — passing one throws at render time, which took
+           down every route including the Identity pages. "h1, h2" is a plain
+           CSS selector list, so the first heading in document order wins. *@
+        <FocusOnNavigate RouteData="routeData" Selector="h1, h2" />
     </Found>
 </Router>

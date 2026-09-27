@@ -22,7 +22,7 @@
 }
 
 .stat-card {
-    background: #fff;
+    background: var(--card);
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 16px;
@@ -32,7 +32,7 @@
     font-family: 'Source Serif 4', serif;
     font-size: 22px;
     font-weight: 700;
-    color: var(--navy);
+    color: var(--brand-text);
 }
 
 .stat-label {
@@ -52,7 +52,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #fff;
+    background: var(--card);
     border: 1px solid var(--line);
     border-radius: 8px;
     padding: 8px 12px;
@@ -74,7 +74,7 @@
 }
 
 .data-table {
-    background: #fff;
+    background: var(--card);
     border: 1px solid var(--line);
     border-radius: 12px;
     overflow: hidden;
@@ -95,7 +95,7 @@ th {
     letter-spacing: .3px;
     padding: 12px 18px;
     border-bottom: 1px solid var(--line);
-    background: var(--offwhite);
+    background: var(--surface);
     white-space: nowrap;
 }
 
@@ -112,7 +112,7 @@ tr:last-child td {
 }
 
 tr:hover td {
-    background: var(--offwhite);
+    background: var(--surface);
 }
 
 .student-cell {
@@ -125,8 +125,8 @@ tr:hover td {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: var(--navy-tint, #EEF0FB);
-    color: var(--navy);
+    background: var(--brand-tint);
+    color: var(--brand-text);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -153,8 +153,8 @@ tr:hover td {
 }
 
 .score-pill.mid {
-    background: #FEF3C7;
-    color: #B45309;
+    background: var(--warn-tint);
+    color: var(--warn);
 }
 
 .score-pill.low {
@@ -162,10 +162,3 @@ tr:hover td {
     color: var(--live);
 }
 
-.empty-state {
-    border: 1px dashed var(--line);
-    border-radius: 10px;
-    padding: 30px;
-    text-align: center;
-    color: var(--muted);
-}

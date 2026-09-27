@@ -61,6 +61,7 @@ builder.Services.AddScoped<AttendanceService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<ReportingService>();
 builder.Services.AddScoped<LessonProgressService>();
+builder.Services.AddScoped<AchievementService>();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
@@ -146,19 +147,63 @@ app.MapRazorComponents<App>()
 
 app.MapAdditionalIdentityEndpoints();
 
-//Seeding the Instructor role and assign it to my email
-using (var scope = app.Services.CreateScope()) 
-    { var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>(); 
-      var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>(); 
-        if (!await roleManager.RoleExistsAsync("Instructor")) 
-            { 
-                await roleManager.CreateAsync(new IdentityRole("Instructor")); 
-            } 
-      var instructorUser = await userManager.FindByEmailAsync("fehintolusamuel@gmail.com"); 
-        if (instructorUser is not null && !await userManager.IsInRoleAsync(instructorUser, "Instructor"))
-            { 
-                await userManager.AddToRoleAsync(instructorUser, "Instructor"); 
-            } 
-    } 
+// Ensure the Instructor role exists, then grant it to whoever is listed in
+// configuration. Emails come from "Northbound:InstructorEmails" (appsettings
+// or the InstructorEmails env var) and are empty by default, so nobody gets
+// elevated by accident — in particular there is no hardcoded address here.
+using (var scope = app.Services.CreateScope())
+{
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("RoleSeeding");
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    const string instructorRole = "Instructor";
+    if (!await roleManager.RoleExistsAsync(instructorRole))
+    {
+        var result = await roleManager.CreateAsync(new IdentityRole(instructorRole));
+        if (!result.Succeeded)
+        {
+            logger.LogError("Could not create the {Role} role: {Errors}",
+                instructorRole, string.Join("; ", result.Errors.Select(e => e.Description)));
+        }
+    }
+
+    var configured = builder.Configuration.GetSection("Northbound:InstructorEmails").Get<string[]>()
+        ?? Array.Empty<string>();
+
+    if (configured.Length == 0)
+    {
+        logger.LogInformation(
+            "No instructor emails configured. Set Northbound:InstructorEmails (appsettings.json or env var) to grant the Instructor role.");
+    }
+    else
+    {
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        foreach (var email in configured.Select(e => e?.Trim()).Where(e => !string.IsNullOrWhiteSpace(e)))
+        {
+            var user = await userManager.FindByEmailAsync(email);
+            if (user is null)
+            {
+                logger.LogWarning("Instructor email {Email} is configured but no such user exists yet.", email);
+                continue;
+            }
+
+            if (await userManager.IsInRoleAsync(user, instructorRole))
+            {
+                continue;
+            }
+
+            var result = await userManager.AddToRoleAsync(user, instructorRole);
+            if (result.Succeeded)
+            {
+                logger.LogInformation("Granted the {Role} role to {Email}.", instructorRole, email);
+            }
+            else
+            {
+                logger.LogError("Could not grant {Role} to {Email}: {Errors}",
+                    instructorRole, email, string.Join("; ", result.Errors.Select(e => e.Description)));
+            }
+        }
+    }
+}
 
 app.Run();

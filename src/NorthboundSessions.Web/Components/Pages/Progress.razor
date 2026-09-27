@@ -9,8 +9,10 @@
 @using NorthboundSessions.Web.Services
 @inject NavigationManager Nav
 @using NorthboundSessions.Web.Data
+@inject AchievementService Achievements
 @attribute [Authorize]
 
+<PageTitle>Your progress · Northbound</PageTitle>
 
 <div class="container">
     <div class="page-header">
@@ -25,6 +27,22 @@
             <div class="metric"><div class="metric-num text-stat">@SessionsAttendedCount</div><div class="text-small">Sessions attended</div></div>
             <div class="metric"><div class="metric-num text-stat">@CurrentStreak</div><div class="text-small">Current streak</div></div>
         </div>
+    </section>
+
+    <!-- Achievements -->
+    <section class="section">
+        <div class="section-head">
+            <h2>Achievements</h2>
+            <span class="text-small">@EarnedCount of @AchievementStates.Count earned</span>
+        </div>
+        @if (AchievementStates.Count == 0)
+        {
+            <div class="empty-state text-small">No achievements yet — start a lesson to unlock your first one.</div>
+        }
+        else
+        {
+            <AchievementGrid Items="@AchievementStates" />
+        }
     </section>
 
     <!-- Quiz history -->
@@ -85,6 +103,9 @@
     private int CurrentStreak;
     private string _studentId = string.Empty;
 
+    private IReadOnlyList<AchievementState> AchievementStates = Array.Empty<AchievementState>();
+    private int EarnedCount => AchievementStates.Count(a => a.Unlocked);
+
     private List<QuizHistoryItem> QuizHistory = new();
     private List<AttendanceHistoryItem> AttendanceHistory = new();
 
@@ -123,8 +144,22 @@
             questionCounts.TryGetValue(a.QuizId, out var total) && total > 0
                 ? a.Score * 100.0 / total : 0;
 
-        LessonsCompletedCount = attempts.Select(a => a.QuizId).Distinct().Count();
-        AverageQuizScore = attempts.Count > 0 ? attempts.Average(a => a.Score) : null;
+        // "Lessons completed" means distinct lessons touched, so count via
+        // each quiz's lesson. Averaging raw Score (a point count) instead of
+        // ToPercent() made this show e.g. "7%" instead of "78%".
+        var lessonIdsByQuiz = await db.Quizzes
+            .Where(q => quizIds.Contains(q.Id))
+            .Select(q => new { q.Id, q.LessonId })
+            .ToDictionaryAsync(x => x.Id, x => x.LessonId);
+
+        LessonsCompletedCount = attempts
+            .Select(a => lessonIdsByQuiz.TryGetValue(a.QuizId, out var lessonId) ? lessonId : (int?)null)
+            .Where(id => id is not null)
+            .Distinct()
+            .Count();
+
+        var percents = attempts.Select(ToPercent).ToList();
+        AverageQuizScore = percents.Count > 0 ? percents.Average() : null;
         SessionsAttendedCount = attendances.Count;
 
         var activityDates = attempts.Select(a => a.SubmittedAt.Date)
@@ -133,7 +168,7 @@
             .OrderByDescending(d => d)
             .ToList();
 
-        CurrentStreak = ComputeCurrentStreak(activityDates);
+        CurrentStreak = AchievementService.ComputeStreaks(activityDates).current;
 
         QuizHistory = attempts
             .Select(a => new QuizHistoryItem(a.Quiz?.Title ?? "Quiz", (int)Math.Round(ToPercent(a)), a.SubmittedAt.DateTime))
@@ -142,22 +177,8 @@
         AttendanceHistory = attendances
             .Select(a => new AttendanceHistoryItem(a.LiveSession?.Topic ?? "Live session", a.CheckedInAt.DateTime))
             .ToList();
-    }
 
-    private static int ComputeCurrentStreak(List<DateTime> datesDescending)
-    {
-        if (datesDescending.Count == 0) return 0;
-
-        var cursor = DateTime.UtcNow.Date;
-        if (!datesDescending.Contains(cursor)) cursor = cursor.AddDays(-1);
-
-        var streak = 0;
-        while (datesDescending.Contains(cursor))
-        {
-            streak++;
-            cursor = cursor.AddDays(-1);
-        }
-        return streak;
+        AchievementStates = await Achievements.GetAchievementsAsync(_studentId);
     }
 }
 

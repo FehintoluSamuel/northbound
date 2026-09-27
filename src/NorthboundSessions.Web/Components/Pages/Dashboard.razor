@@ -3,24 +3,28 @@
 @layout AppLayout
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
+@inject AchievementService Achievements
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Data
 @using Microsoft.AspNetCore.Authorization
 @using NorthboundSessions.Web.Data
-@using NorthboundSessions.Data
+@using NorthboundSessions.Web.Services
 @attribute [Authorize]
 
+<PageTitle>Dashboard | Northbound Sessions</PageTitle>
+
 <div class="hero">
-    <img class="hero-img" src="/images/hero-banner1.jpg" alt="" />
+    <img class="hero-img" src="/images/hero-banner1.jpg" alt="" width="2000" height="1333"
+         fetchpriority="high" decoding="async" />
     <div class="hero-overlay">
-        <div class="hero-eyebrow">Today's focus</div>
-        <h1>Good morning, @DisplayFirstName.</h1>
+        <div class="hero-eyebrow">@Greeting</div>
+        <h1>Good @TimeOfDay, @DisplayFirstName.</h1>
         @if (NextLesson is not null)
         {
             <p>@NextLesson.Title is up next@(NextLesson.MarketSymbol is not null ? $" — covers {NextLesson.MarketSymbol}" : "").</p>
             <a class="hero-cta" href="@($"/lessons/{NextLesson.Id}")">
                 Continue today's lesson
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2.6"><path d="M9 6l6 6-6 6" /></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
             </a>
         }
         else
@@ -35,9 +39,13 @@
     <!-- Streak -->
     <div class="streak-row">
         <div class="streak-left">
-            <img src="/images/icons/fire.png" width="22" height="22" alt="Streak" />
+            <span class="streak-icon" aria-hidden="true">
+                <AchievementIcon Name="flame" Size="22" />
+            </span>
             <div>
-                <div class="streak-num text-stat">@CurrentStreak day streak</div>
+                <div class="streak-num text-stat">
+                    @(CurrentStreak == 1 ? "1 day streak" : $"{CurrentStreak} day streak")
+                </div>
                 <div class="text-small">Based on quiz attempts and session check-ins</div>
             </div>
         </div>
@@ -47,10 +55,11 @@
     <!-- Continue learning -->
     @if (NextLesson is not null)
     {
-        <section class="section">
-            <div class="section-head"><h2>Continue learning</h2></div>
+        <section class="section" aria-labelledby="h-continue">
+            <div class="section-head"><h2 id="h-continue">Continue learning</h2></div>
             <div class="lesson-card">
                 <img class="lesson-thumb" src="@($"/images/lessons/{NextLesson.Id}.jpg")"
+                     width="700" height="466" loading="lazy" decoding="async"
                      onerror="this.onerror=null;this.src='/images/lessons/continue_learning_default.jpg';" alt="" />
                 <div class="lesson-body">
                     <h3 class="text-h3">@NextLesson.Title</h3>
@@ -65,12 +74,16 @@
     }
 
     <!-- Next live session -->
-    <section class="section">
-        <div class="section-head"><h2>Next live session</h2></div>
+    <section class="section" aria-labelledby="h-session">
+        <div class="section-head"><h2 id="h-session">Next live session</h2></div>
         @if (NextSession is not null)
         {
             <div class="session-card">
-                <img class="session-photo" src="images/instructors/default.jpg" alt="" />
+                @* Path was "images/instructors/default.jpg" but that directory is
+                   empty — a guaranteed 404 on every dashboard render. The real
+                   asset is images/instructor.jpg. *@
+                <img class="session-photo" src="/images/instructor.jpg"
+                     width="283" height="400" loading="lazy" decoding="async" alt="" />
                 <div class="session-body">
                     <h3 class="text-h3">@NextSession.Topic</h3>
                     <p class="text-small">@NextSession.ScheduledAt.ToString("ddd, MMM d · h:mm tt")</p>
@@ -85,52 +98,85 @@
             </div>
         }
     </section>
-    
+
     <!-- Achievements -->
-    <section class="section">
-        <div class="section-head"><h2>Achievements</h2></div>
-        <div class="badge-scroll">
-            @foreach (var badge in Achievements)
-            {
-                <div class="badge @(badge.Unlocked ? "unlocked" : "")" title="@badge.Description">
-                    <div class="badge-circle">
-                        @((MarkupString)badge.IconSvg)
-                    </div>
-                    <div class="badge-name text-micro">@badge.Name</div>
-                </div>
-            }
+    <section class="section" aria-labelledby="h-ach">
+        <div class="section-head">
+            <h2 id="h-ach">Achievements</h2>
+            <a class="section-link" href="/progress">View all @AchievementStates.Count</a>
         </div>
+
+        @if (AchievementStates.Count > 0)
+        {
+            <div class="ach-summary">
+                <div class="ach-summary-num text-stat">@UnlockedCount</div>
+                <div class="text-small">of @AchievementStates.Count earned</div>
+                <div class="ach-summary-bar" role="img"
+                     aria-label="@UnlockedCount of @AchievementStates.Count achievements earned">
+                    <span style="width:@($"{UnlockedPercent:0}%")"></span>
+                </div>
+            </div>
+
+            @* Show the handful closest to completion, not all 30 at once. *@
+            <div class="ach-strip">
+                @foreach (var state in UpNextAchievements)
+                {
+                    <div class="ach-strip-item">
+                        <div class="ach-strip-icon tier-@TierSlug(state.Definition.Tier)">
+                            <AchievementIcon Name="@state.Definition.Icon" Size="20" />
+                        </div>
+                        <div class="ach-strip-body">
+                            <div class="ach-strip-name">@state.Definition.Name</div>
+                            <div class="ach-strip-meta text-micro">
+                                @state.Current / @state.Definition.Goal
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     </section>
 
     <!-- This week -->
-    <section class="section">
-        <div class="section-head"><h2>This week</h2></div>
+    <section class="section" aria-labelledby="h-week">
+        <div class="section-head"><h2 id="h-week">This week</h2></div>
         <div class="metric-row">
-            <div class="metric"><div class="metric-num text-stat">@LessonsCompletedCount</div><div class="text-small">Lessons completed</div></div>
-            <div class="metric"><div class="metric-num text-stat">@(AverageQuizScore is null ? "—" : $"{AverageQuizScore:0}%")</div><div class="text-small">Average quiz score</div></div>
-            <div class="metric"><div class="metric-num text-stat">@SessionsAttendedCount</div><div class="text-small">Sessions attended</div></div>
+            <div class="metric">
+                <div class="metric-num text-stat">@LessonsCompletedCount</div>
+                <div class="text-small">Lessons completed</div>
+            </div>
+            <div class="metric">
+                <div class="metric-num text-stat">@(AverageQuizScore is null ? "—" : $"{AverageQuizScore:0}%")</div>
+                <div class="text-small">Average quiz score</div>
+            </div>
+            <div class="metric">
+                <div class="metric-num text-stat">@SessionsAttendedCount</div>
+                <div class="text-small">Sessions attended</div>
+            </div>
         </div>
     </section>
 
     <!-- Recent activity -->
-    <section class="section">
-        <div class="section-head"><h2>Recent activity</h2></div>
+    <section class="section" aria-labelledby="h-activity">
+        <div class="section-head"><h2 id="h-activity">Recent activity</h2></div>
         @if (RecentActivity.Count == 0)
         {
             <p class="text-small">No activity yet — quiz attempts and session check-ins will show up here.</p>
         }
         else
         {
-            <div class="activity">
+            <ul class="activity">
                 @foreach (var item in RecentActivity)
                 {
-                    <div class="activity-item">
-                        <img src="/images/icons/checklist.png" width="14" height="14" alt="" />
-                        <div class="activity-text text-body">@item.Description</div>
-                        <div class="activity-time text-small">@item.When.ToString("MMM d")</div>
-                    </div>
+                    <li class="activity-item">
+                        <span class="activity-icon" aria-hidden="true">
+                            <AchievementIcon Name="checklist" Size="14" />
+                        </span>
+                        <span class="activity-text text-body">@item.Description</span>
+                        <span class="activity-time text-small">@item.When.ToString("MMM d")</span>
+                    </li>
                 }
-            </div>
+            </ul>
         }
     </section>
 
@@ -148,17 +194,42 @@
     private string _studentId = string.Empty;
 
     private List<ActivityItem> RecentActivity = new();
-    private List<Achievement> Achievements = new();
+    private IReadOnlyList<AchievementState> AchievementStates = Array.Empty<AchievementState>();
 
     private record ActivityItem(string Description, DateTime When);
-    private record Achievement(string Name, string Description, string IconSvg, bool Unlocked);
 
-    private const string IconMedal = "<img src=\"/images/icons/rocket-launch.png\" style=\"width:100%; height:100%; object-fit:contain;\" alt=\"First Quiz\" />";
-    private const string IconFlame = "<img src=\"/images/icons/fire.png\" style=\"width:100%; height:100%; object-fit:contain;\" alt=\"Streak\" />";
-    private const string IconSunrise = "<img src=\"/images/icons/sunrise.png\" style=\"width:100%; height:100%; object-fit:contain;\" alt=\"Early Bird\" />";
-    private const string IconTarget = "<img src=\"/images/icons/target.png\" style=\"width:100%; height:100%; object-fit:contain;\" alt=\"Perfect Score\" />";
-    private const string IconStack = "<img src=\"/images/icons/stack.png\" style=\"width:100%; height:100%; object-fit:contain;\" alt=\"5 Lessons\" />";
+    private int UnlockedCount => AchievementStates.Count(a => a.Unlocked);
+    private int UnlockedPercent => AchievementStates.Count == 0 ? 0 : UnlockedCount * 100 / AchievementStates.Count;
 
+    /// <summary>The 4 locked achievements closest to completion — a motivating next step.</summary>
+    private IEnumerable<AchievementState> UpNextAchievements => AchievementStates
+        .Where(a => !a.Unlocked && a.Definition.Goal > 0)
+        .OrderByDescending(a => a.Percent)
+        .ThenBy(a => a.Definition.Goal)
+        .Take(4);
+
+    private static string TimeOfDay
+    {
+        get
+        {
+            var h = DateTime.Now.Hour;
+            return h < 12 ? "morning" : h < 18 ? "afternoon" : "evening";
+        }
+    }
+
+    private string Greeting => NextLesson is null
+        ? "Welcome back"
+        : NextLesson.IsLiveDay
+            ? "Live day"
+            : "Today's focus";
+
+    private static string TierSlug(AchievementTier tier) => tier switch
+    {
+        AchievementTier.Bronze => "bronze",
+        AchievementTier.Silver => "silver",
+        AchievementTier.Gold   => "gold",
+        _                     => "none",
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -184,9 +255,10 @@
             .OrderBy(s => s.ScheduledAt)
             .FirstOrDefaultAsync();
 
+        AchievementStates = await Achievements.GetAchievementsAsync(_studentId);
+
         if (string.IsNullOrEmpty(_studentId))
         {
-            Achievements = BuildAchievements(attemptCount: 0, perfectScore: false, streak: 0, lessonsCompleted: 0, earlyBird: false);
             return;
         }
 
@@ -213,75 +285,27 @@
         AverageQuizScore = attempts.Count > 0 ? attempts.Average(ToPercent) : null;
         SessionsAttendedCount = attendances.Count;
 
-        var activityDates = attempts.Select(a => a.SubmittedAt.Date)
-            .Concat(attendances.Select(a => a.CheckedInAt.Date))
+        var activityDates = attempts.Select(a => a.SubmittedAt.UtcDateTime.Date)
+            .Concat(attendances.Select(a => a.CheckedInAt.UtcDateTime.Date))
             .Distinct()
             .OrderByDescending(d => d)
             .ToList();
 
-        (CurrentStreak, LongestStreak) = ComputeStreaks(activityDates);
+        (CurrentStreak, LongestStreak) = AchievementService.ComputeStreaks(activityDates);
 
-        var earlyBird = attempts.Any(a => a.SubmittedAt.Hour < 8);
-        var perfectScore = attempts.Any(a => questionCounts.TryGetValue(a.QuizId, out var t) && t > 0 && a.Score == t);
-
-        Achievements = BuildAchievements(attempts.Count, perfectScore, CurrentStreak, LessonsCompletedCount, earlyBird);
-
-        // SubmittedAt / CheckedInAt are DateTimeOffset; convert with .DateTime
-        // when constructing ActivityItem (which expects DateTime):
         var quizActivity = attempts
             .OrderByDescending(a => a.SubmittedAt)
             .Take(3)
-            .Select(a => new ActivityItem($"Scored {(int)Math.Round(ToPercent(a))}% on a quiz", a.SubmittedAt.DateTime));
+            .Select(a => new ActivityItem($"Scored {(int)Math.Round(ToPercent(a))}% on a quiz", a.SubmittedAt.UtcDateTime));
 
         var attendanceActivity = attendances
             .OrderByDescending(a => a.CheckedInAt)
             .Take(3)
-            .Select(a => new ActivityItem("Checked in to a live session", a.CheckedInAt.DateTime));
+            .Select(a => new ActivityItem("Checked in to a live session", a.CheckedInAt.UtcDateTime));
 
         RecentActivity = quizActivity.Concat(attendanceActivity)
             .OrderByDescending(a => a.When)
             .Take(5)
             .ToList();
     }
-
-    private static (int current, int longest) ComputeStreaks(List<DateTime> datesDescending)
-    {
-        if (datesDescending.Count == 0) return (0, 0);
-
-        var cursor = DateTime.UtcNow.Date;
-        if (!datesDescending.Contains(cursor)) cursor = cursor.AddDays(-1);
-
-        var current = 0;
-        while (datesDescending.Contains(cursor))
-        {
-            current++;
-            cursor = cursor.AddDays(-1);
-        }
-
-        var longest = 1;
-        var run = 1;
-        for (int i = 1; i < datesDescending.Count; i++)
-        {
-            if (datesDescending[i - 1].AddDays(-1) == datesDescending[i])
-            {
-                run++;
-                longest = Math.Max(longest, run);
-            }
-            else
-            {
-                run = 1;
-            }
-        }
-
-        return (current, longest);
-    }
-
-    private List<Achievement> BuildAchievements(int attemptCount, bool perfectScore, int streak, int lessonsCompleted, bool earlyBird) => new()
-    {
-        new("First Quiz", "Complete your first quiz", IconMedal, attemptCount >= 1),
-        new("5-Day Streak", "Stay active 5 days in a row", IconFlame, streak >= 5),
-        new("Perfect Score", "Score 100% on a quiz", IconTarget, perfectScore),
-        new("5 Lessons", "Complete quizzes for 5 lessons", IconStack, lessonsCompleted >= 5),
-        new("Early Bird", "Submit a quiz before 8 AM", IconSunrise, earlyBird),
-    };
 }

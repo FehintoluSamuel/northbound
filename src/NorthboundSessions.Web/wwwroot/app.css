@@ -1,455 +1,395 @@
-/* Add to the top of wwwroot/app.css, or wherever your existing styles live */
+/* ============================================================================
+   app.css — Bootstrap overrides + auth page styles.
+
+   This file used to declare its own :root token block, which silently
+   overrode site-theme.css and left the app with two competing values for
+   --navy, --ink, --line and --slate. All tokens now live in
+   css/site-theme.css. If you need a new token, add it there — never here.
+   ========================================================================== */
+
+/* --- Bootstrap re-skin --------------------------------------------------- */
+/* Bootstrap ships blue; align it with the brand so form controls, validation
+   messages and default links do not clash with the rest of the UI.
+
+   --bs-body-color-rgb must be mapped too, not just --bs-body-color: Bootstrap
+   5.3's own rules (.text-body, .text-body-emphasis) read the *-rgb triplet,
+   so overriding only the hex left them on Bootstrap's stock #212529 — dark
+   grey on a dark card, i.e. invisible in dark mode. */
 :root {
-    --navy: #1F2A44;
-    --emerald: #16A34A;
-    --fog: #F3F4F6;
-    --ink: #111827;
-    --slate: #6B7280;
-    --line: #E1E3E8;
-  }
-  
-  .brand-heading {
-    font-family: 'Source Serif 4', serif;
-    color: var(--navy);
-    
-  }
-  
-  .btn-brand-primary {
-    background: var(--navy);
-    color: #fff;
-    border: none;
-    padding: 10px 22px;
-    border-radius: 2px;
-    font-weight: 500;
-    
-  }
-  .btn-brand-primary:hover {
-    background: #152038;
-  }
-  
-  .auth-card {
-
-  width: 100%;
-
-  max-width: 380px;
-
-  margin: 0 auto;
-
+    --bs-body-color: var(--ink);
+    --bs-body-color-rgb: var(--ink-rgb);
+    --bs-body-bg: var(--bg);
+    --bs-border-color: var(--line);
+    --bs-link-color: var(--brand-text);
+    --bs-link-hover-color: var(--brand-hover);
+    --bs-primary: var(--brand);
+    --bs-secondary-color: var(--muted);
 }
 
-.auth-card h1,
-
-.auth-card .auth-subtitle {
-
-  text-align: center;
-
+html, body {
+    font-family: var(--font-sans);
 }
-
-.auth-switch {
-
-  text-align: center;
-
-}
-
-/* Main authentication area */
-
-.auth-shell {
-
-  min-height: 100vh;
-
-  background: var(--fog, #F3F4F6);
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  padding: 24px;
-
-}
-
-/* Main white card */
-
-.auth-card-outer {
-
-  background: #fff;
-
-  border-radius: 20px;
-
-  box-shadow: 0 20px 60px -20px rgba(31, 42, 68, 0.25);
-
-  padding: 16px;
-
-  display: grid;
-
-  grid-template-columns: 1.1fr 1fr;
-
-  gap: 16px;
-
-  max-width: 1100px;
-
-  width: 100%;
-
-  box-sizing: border-box;
-
-  /* Prevent children from visually escaping the card */
-
-  overflow: hidden;
-
-}
-
-/* Hero/image container */
-
-.auth-visual {
-
-  position: relative;
-
-  border-radius: 14px;
-
-  overflow: hidden;
-
-  background: var(--navy, #1F2A44);
-
-  min-height: 560px;
-
-  /* Important */
-
-  width: 100%;
-
-}
-
-/* Hero image */
-
-.auth-visual img {
-
-  position: absolute;
-
-  inset: 0;
-
-  width: 100%;
-
-  height: 100%;
-
-  object-fit: cover;
-
-  display: block;
-
-}
-
-/* Testimonial */
-
-.auth-quote {
-
-  position: absolute;
-
-  left: 20px;
-
-  right: 20px;
-
-  bottom: 20px;
-
-  background: rgba(31, 42, 68, 0.55);
-
-  backdrop-filter: blur(6px);
-
-  color: #fff;
-
-  padding: 22px;
-
-  border-radius: 8px;
-
-  box-sizing: border-box;
-
-}
-
-.auth-quote blockquote {
-
-  font-family: 'Source Serif 4', serif;
-
-  font-size: 17px;
-
-  line-height: 1.5;
-
-  margin-bottom: 12px;
-
-}
-
-.auth-quote cite {
-
-  font-style: normal;
-
-  font-size: 13px;
-
-  opacity: 0.85;
-
-}
-
-/* Right-side form panel */
-
-.auth-panel {
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  padding: 32px;
-
-  box-sizing: border-box;
-
-}
-
-/* Logo */
-
-.auth-logo {
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  gap: 10px;
-
-  margin-bottom: 28px;
-
-  text-decoration: none;
-
-  color: var(--navy, #1F2A44);
-
-  font-family: 'Source Serif 4', serif;
-
-  font-weight: 600;
-
-  font-size: 16px;
-
-}
-
-/* Heading */
-
-.auth-card h1 {
-
-  font-family: 'Source Serif 4', serif;
-
-  color: var(--navy, #1F2A44);
-
-  font-size: 26px;
-
-  margin-bottom: 6px;
-
-}
-
-.auth-card .auth-subtitle {
-
-  color: var(--slate, #6B7280);
-
-  font-size: 14px;
-
-  margin-bottom: 26px;
-
-}
-
-/* Form fields */
-
-.auth-field {
-
-  margin-bottom: 16px;
-
-}
-
-.auth-field label {
-
-  display: block;
-
-  font-size: 13.5px;
-
-  font-weight: 500;
-
-  color: var(--ink, #111827);
-
-  margin-bottom: 6px;
-
-}
-
-.auth-field .form-control {
-
-  width: 100%;
-
-  padding: 11px 14px;
-
-  border: 1px solid var(--line, #E1E3E8);
-
-  border-radius: 6px;
-
-  font-size: 14.5px;
-
-  box-sizing: border-box;
-
-  box-shadow: 0 2px 6px rgba(31, 42, 68, 0.10);
-
-}
-
-.auth-field .form-control:focus {
-
-  outline: none;
-
-  border-color: var(--navy, #1F2A44);
-
-}
-
-/* Primary button */
 
 .btn-brand-primary {
-
-  width: 100%;
-
-  background: var(--navy, #1F2A44);
-
-  color: #fff;
-
-  border: none;
-
-  padding: 12px;
-
-  border-radius: 6px;
-
-  font-weight: 500;
-
-  font-size: 15px;
-
-  cursor: pointer;
-
-  box-shadow: 0 4px 10px rgba(31, 42, 68, 0.22);
-
+    background: var(--brand);
+    color: var(--on-brand);
+    border: 1px solid var(--brand);
+    padding: 10px 22px;
+    border-radius: var(--r-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--dur) var(--ease);
 }
 
 .btn-brand-primary:hover {
-
-  background: #152038;
-
-  box-shadow: 0 6px 14px rgba(31, 42, 68, 0.28);
-
-}
-
-/* Login/register switch */
-
-.auth-switch {
-
-  text-align: center;
-
-  font-size: 14px;
-
-  color: var(--slate, #6B7280);
-
-  margin-top: 20px;
-
-}
-
-.auth-switch a {
-
-  color: var(--navy, #1F2A44);
-
-  font-weight: 500;
-
-}
-
-/* Login password field*/
-.password-field { position: relative; }
-.password-field .form-control { padding-right: 42px; }
-.toggle-password-btn {
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    background: none; border: none; cursor: pointer; padding: 4px; color: #6B7280; display: flex;
-}
-.toggle-password-btn .eye-closed { display: none; }
-.toggle-password-btn.showing .eye-open { display: none; }
-.toggle-password-btn.showing .eye-closed { display: block; }
-.forgot-password-link { display: block; margin-top: 6px; font-size: 12.5px; color: #243896; font-weight: 600; text-align: right; }
-
-/* Mobile */
-
-@media (max-width: 860px) {
-
-  .auth-card-outer {
-
-    grid-template-columns: 1fr;
-
-  }
-
-  .auth-visual {
-
-    min-height: 220px;
-
-  }
-
-  .auth-quote {
-
-    display: none;
-
-  }
-
-}
-  
-
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
-
-a, .btn-link {
-    color: #006bb7;
+    background: var(--brand-hover);
+    border-color: var(--brand-hover);
+    color: var(--on-brand);
 }
 
 .btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    --bs-btn-bg: var(--brand);
+    --bs-btn-border-color: var(--brand);
+    --bs-btn-hover-bg: var(--brand-hover);
+    --bs-btn-hover-border-color: var(--brand-hover);
+    --bs-btn-color: var(--on-brand);
+    --bs-btn-hover-color: var(--on-brand);
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.btn:focus-visible,
+.btn:active:focus-visible,
+.btn-link.nav-link:focus-visible,
+.form-control:focus-visible,
+.form-check-input:focus-visible {
+    box-shadow: none;
+    outline: var(--focus-width) solid var(--focus-color);
+    outline-offset: var(--focus-offset);
 }
 
-.content {
-    padding-top: 0.25rem;
+.form-control,
+.form-select {
+    background: var(--card);
+    border-color: var(--line-strong);
+    color: var(--ink);
 }
 
-h1:focus {
-    outline: none;
+.form-control:focus,
+.form-select:focus {
+    background: var(--card);
+    border-color: var(--brand);
+    color: var(--ink);
+    box-shadow: var(--ring);
 }
 
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+.form-control::placeholder { color: var(--muted); }
+
+.form-check-input { background-color: var(--surface); border-color: var(--line-strong); }
+.form-check-input:checked { background-color: var(--brand); border-color: var(--brand); }
+
+/* Validation states use the semantic tokens so they theme correctly. */
+.valid.modified:not([type=checkbox]) { outline: 1px solid var(--spark); }
+.invalid { outline: 1px solid var(--live); }
+.validation-message { color: var(--live); font-size: var(--fs-small); }
+
+.h1, .h2, .h3, h1, h2, h3 { color: var(--brand-text); }
+
+.text-muted { color: var(--muted) !important; }
+
+.card {
+    background: var(--card);
+    border-color: var(--line);
+    color: var(--ink);
 }
 
-.invalid {
-    outline: 1px solid #e50000;
+hr { border-color: var(--line); opacity: 1; }
+
+/* --- Blazor error surfaces ----------------------------------------------- */
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 0.7rem 1.25rem;
+    background: var(--live);
+    color: var(--on-live);
+    box-shadow: var(--shadow-lg);
 }
 
-.validation-message {
-    color: #e50000;
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    padding: 0 0 0 1rem;
+}
+
+#blazor-error-ui .reload {
+    color: var(--on-live);
+    text-decoration: underline;
+    font-weight: 600;
 }
 
 .blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
-    padding: 1rem 1rem 1rem 3.7rem;
-    color: white;
+    background: var(--live-tint);
+    border-left: 4px solid var(--live);
+    border-radius: var(--r-sm);
+    padding: var(--sp-4);
+    color: var(--live);
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
+.blazor-error-boundary::after { content: "An error has occurred."; }
 
-.darker-border-checkbox.form-check-input {
-    border-color: #929292;
-}
+.darker-border-checkbox.form-check-input { border-color: var(--line-strong); }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-    color: var(--bs-secondary-color);
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+    color: var(--muted);
     text-align: end;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-    text-align: start;
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder { text-align: start; }
+
+/* ============================================================================
+   Auth pages (Login / Register / ForgotPassword)
+   ========================================================================== */
+.auth-shell {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-6);
 }
 
+.auth-card-outer {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--sp-4);
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: var(--sp-4);
+    max-width: 1100px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.auth-visual {
+    position: relative;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: var(--brand);
+    min-height: 560px;
+    width: 100%;
+}
+
+.auth-visual img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.auth-quote {
+    position: absolute;
+    left: var(--sp-5);
+    right: var(--sp-5);
+    bottom: var(--sp-5);
+    background: rgba(10, 14, 32, .58);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    padding: var(--sp-5);
+    border-radius: var(--r-md);
+}
+
+.auth-quote blockquote {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    line-height: 1.5;
+    margin: 0 0 var(--sp-3);
+}
+
+.auth-quote cite {
+    font-style: normal;
+    font-size: 13px;
+    opacity: .85;
+}
+
+.auth-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-8) var(--sp-6);
+}
+
+.auth-card { width: 100%; max-width: 380px; margin: 0 auto; }
+.auth-card h1, .auth-card .auth-subtitle { text-align: center; }
+
+.auth-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: var(--sp-6);
+    text-decoration: none;
+    color: var(--brand-text);
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.auth-card h1 {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    margin-bottom: 6px;
+}
+
+.auth-card .auth-subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: var(--sp-6);
+}
+
+.auth-field { margin-bottom: var(--sp-4); }
+
+.auth-field label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 6px;
+}
+
+.auth-field .form-control {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    font-size: 14.5px;
+}
+
+.auth-field .form-control:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: var(--ring);
+}
+
+.btn-brand-primary.w-100 { width: 100%; padding: 12px; font-size: 15px; }
+
+.auth-switch {
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: var(--sp-5);
+}
+
+.auth-switch a { color: var(--brand-text); font-weight: 500; }
+
+.password-field { position: relative; }
+.password-field .form-control { padding-right: 44px; }
+
+.toggle-password-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    color: var(--muted);
+    display: flex;
+    border-radius: var(--r-sm);
+}
+
+.toggle-password-btn:hover { color: var(--ink); }
+.toggle-password-btn .eye-closed { display: none; }
+.toggle-password-btn.showing .eye-open { display: none; }
+.toggle-password-btn.showing .eye-closed { display: block; }
+
+.forgot-password-link {
+    display: block;
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--brand-text);
+    font-weight: 600;
+    text-align: right;
+}
+
+/* --- Auth responsive ------------------------------------------------------ */
+@media (max-width: 860px) {
+    .auth-shell { padding: 0; }
+    .auth-card-outer {
+        grid-template-columns: 1fr;
+        border-radius: 0;
+        border: 0;
+        min-height: 100dvh;
+        padding: 0;
+        gap: 0;
+    }
+    .auth-visual { min-height: 180px; border-radius: 0; }
+    .auth-quote { display: none; }
+    .auth-panel { padding: var(--sp-6) var(--sp-5) var(--sp-10); }
+    .auth-logo { margin-bottom: var(--sp-4); }
+}
+
+/* --- Blazor error bar -----------------------------------------------------
+   Lives here (global) rather than in a layout so it appears on every page
+   regardless of which layout is active. Token-based, so it stays legible
+   in both themes — the stock template hardcodes lightyellow + light-only. */
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem 2.75rem 0.7rem 1.25rem;
+    z-index: 1000;
+    background: var(--live-tint);
+    color: var(--live);
+    border-top: 1px solid var(--live);
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, .18);
+    font-size: 13.5px;
+}
+
+#blazor-error-ui a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+#blazor-error-ui .dismiss {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.75rem;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    color: inherit;
+}
+
+/* --- Global narrow-screen pass --------------------------------------------
+   Shared safety net so no page has to re-declare these. Page-specific
+   breakpoints still live in each component's scoped .razor.css. */
+@media (max-width: 560px) {
+    /* Tighter gutter keeps content usable at 320px instead of eating
+       40px of a 320px screen on padding alone. */
+    .container { padding-left: var(--sp-4); padding-right: var(--sp-4); }
+
+    /* Long lesson/topic/symbol names must never force a sideways scroll. */
+    h1, h2, h3, .list-title, .text-body, .text-small {
+        overflow-wrap: anywhere;
+    }
+}
+
+/* Nothing should ever scroll sideways. Pair with overflow-wrap above so long
+   strings wrap instead of being clipped. */
+@media (max-width: 860px) {
+    html, body { overflow-x: hidden; }
+}

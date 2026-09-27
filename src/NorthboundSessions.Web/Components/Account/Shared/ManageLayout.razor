@@ -1,17 +1,30 @@
-﻿@inherits LayoutComponentBase
-@layout NorthboundSessions.Web.Components.Layout.MainLayout
+﻿@* ManageLayout.razor — shell for the Identity account-management pages
+   (/Account/Manage/*). Deliberately independent of the student AppLayout:
+   managing an account is a focused, standalone task, so it gets its own
+   centred card rather than the app nav + bottom tab bar. *@
+@inherits LayoutComponentBase
 
-<h1>Manage your account</h1>
+<div class="manage-shell">
+    <a href="/" class="manage-brand" aria-label="Northbound home">
+        <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+            <circle cx="13" cy="13" r="11.5" stroke="currentColor" stroke-width="1.6" />
+            <path d="M13 5.5L15.5 13L13 20.5L10.5 13L13 5.5Z" fill="currentColor" />
+        </svg>
+        <span>Northbound</span>
+    </a>
 
-<div>
-    <h2>Change your account settings</h2>
-    <hr />
-    <div class="row">
-        <div class="col-lg-3">
-            <ManageNavMenu />
-        </div>
-        <div class="col-lg-9">
-            @Body
+    <h1>Manage your account</h1>
+
+    <div class="manage-card">
+        <h2>Change your account settings</h2>
+        <hr />
+        <div class="row">
+            <div class="col-lg-3">
+                <ManageNavMenu />
+            </div>
+            <div class="col-lg-9">
+                @Body
+            </div>
         </div>
     </div>
 </div>

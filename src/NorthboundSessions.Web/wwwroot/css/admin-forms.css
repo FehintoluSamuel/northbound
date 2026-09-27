@@ -60,7 +60,7 @@
 }
 .text-input:focus, .text-area:focus {
     outline: none;
-    border-color: var(--navy);
+    border-color: var(--brand-text);
 }
 .text-area { resize: vertical; }
 
@@ -101,10 +101,10 @@
     border-radius: 10px;
     padding: 16px;
     margin-top: 14px;
-    background: var(--offwhite);
+    background: var(--surface);
 }
 .question-block-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.question-number { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+.question-number { font-size: 12.5px; font-weight: 700; color: var(--brand-text); }
 .remove-btn { background: none; border: none; color: var(--live); font-size: 12.5px; font-weight: 600; cursor: pointer; }
 
 .options-label {
@@ -157,21 +157,21 @@
 }
 
 .add-option-btn {
-    background: none; border: none; color: var(--navy); font-size: 12.5px; font-weight: 700;
+    background: none; border: none; color: var(--brand-text); font-size: 12.5px; font-weight: 700;
     cursor: pointer; margin-top: 10px; padding: 0;
 }
 
 .add-question-btn {
-    display: block; width: 100%; background: var(--offwhite);
+    display: block; width: 100%; background: var(--surface);
     border: 1.5px dashed var(--line); border-radius: 10px; padding: 12px;
-    color: var(--navy); font-size: 13.5px; font-weight: 700; cursor: pointer; margin-top: 16px;
+    color: var(--brand-text); font-size: 13.5px; font-weight: 700; cursor: pointer; margin-top: 16px;
 }
-.add-question-btn:hover { border-color: var(--navy); }
+.add-question-btn:hover { border-color: var(--brand-text); }
 
 .submit-row { display: flex; justify-content: flex-end; }
 .btn-primary {
-    background: var(--navy); color: #fff; border: none;
+    background: var(--brand); color: #fff; border: none;
     padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer;
 }
-.btn-primary:hover:not([disabled]) { background: var(--navy-dark); }
-.btn-primary[disabled] { background: var(--offwhite); color: var(--muted); cursor: not-allowed; }
+.btn-primary:hover:not([disabled]) { background: var(--brand-hover); }
+.btn-primary[disabled] { background: var(--surface); color: var(--muted); cursor: not-allowed; }

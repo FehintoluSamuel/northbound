@@ -1,25 +1,7 @@
-.container {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 0 20px 30px;
-}
-
-.page-header {
-    padding: 20px 0 4px;
-}
-
-.page-header h1 {
-    font-size: var(--fs-h1);
-}
-
-.section {
-    padding: 20px 0;
-}
-
-.section-head h2 {
-    font-size: var(--fs-h2);
-    margin-bottom: 12px;
-}
+/* Progress.razor.css — page-specific rules only.
+   The shared list/page primitives (.container, .page-header, .page-header h1,
+   .section, .section-head h2, .empty-state) live once in
+   wwwroot/css/site-theme.css. */
 
 .metric-row {
     display: grid;
@@ -48,7 +30,7 @@
     border: 1px solid var(--line);
     border-radius: 12px;
     overflow: hidden;
-    background: var(--white);
+    background: var(--card);
 }
 
 .history-item {
@@ -105,10 +87,3 @@
     flex-shrink: 0;
 }
 
-.empty-state {
-    border: 1px dashed var(--line);
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    color: var(--muted);
-}

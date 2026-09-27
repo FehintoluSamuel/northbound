@@ -7,10 +7,34 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  /* Set the theme before first paint so the page never flashes light-then-dark.
+     Reads the SAME localStorage key the Blazor app uses, so a visitor who
+     chose dark mode inside the app sees dark here too. Falls back to the OS
+     preference when they have never chosen. */
+  (function () {
+      try {
+          var stored = localStorage.getItem('theme');
+          var t = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+      }
+  })();
+</script>
 <style>
+  /* Mirrors the tokens in css/site-theme.css so the marketing page and the
+     app present the same brand. This page is served standalone, so it cannot
+     import site-theme.css; keep the two in sync. */
   :root{
-    --navy:#1F2A44; --emerald:#16A34A; --fog:#F3F4F6; --ink:#111827;
-    --slate:#6B7280; --line:#E1E3E8; --paper:#FDFDFC;
+    --navy:#243896; --navy-hover:#1F2F78; --emerald:#15803D; --fog:#F6F7FB;
+    --ink:#151A2B; --slate:#6B7280; --line:#E7E9F2; --paper:#FFFFFF;
+    --surface:#F6F7FB; --navy-fill:#243896; --on-navy:#FFFFFF; --on-navy-muted:#C9D2FF;
+  }
+  [data-theme="dark"]{
+    --navy:#AAB4FF; --navy-hover:#C6CDFF; --emerald:#34D399; --fog:#171A24;
+    --ink:#EDEFF7; --slate:#9BA3B8; --line:#2A2F3F; --paper:#12141C;
+    --surface:#171A24; --navy-fill:#2F47B0; --on-navy:#FFFFFF; --on-navy-muted:#C6CDFF;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{ font-family:'Inter', sans-serif; color:var(--ink); background:var(--paper); line-height:1.65; }
@@ -29,7 +53,20 @@
   .nav-links a:hover{ color:var(--navy); }
   .nav-right{ display:flex; align-items:center; gap:20px; }
   .link-signin{ font-size:14px; font-weight:500; color:var(--navy); }
-  .btn-primary{ background:var(--navy); color:#fff; padding:11px 24px; border-radius:2px; font-size:14px; font-weight:500; display:inline-block; }
+  /* Theme toggle — one icon visible at a time depending on current theme. */
+  .theme-toggle{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px; padding:0;
+    background:none; border:1px solid var(--line); border-radius:9px;
+    color:var(--navy); cursor:pointer;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .theme-toggle:hover{ background:var(--fog); border-color:var(--navy); }
+  .theme-toggle:focus-visible{ outline:2px solid var(--navy); outline-offset:2px; }
+  .theme-toggle .icon-moon{ display:none; }
+  [data-theme="dark"] .theme-toggle .icon-sun{ display:none; }
+  [data-theme="dark"] .theme-toggle .icon-moon{ display:block; }
+  .btn-primary{ background:var(--navy-fill); color:var(--on-navy); padding:11px 24px; border-radius:2px; font-size:14px; font-weight:500; display:inline-block; }
   .btn-primary:hover{ background:#152038; }
 
   /* Hero */
@@ -53,7 +90,7 @@
   }
 
   .float-card{
-    position:absolute; background:#fff; border:1px solid var(--line); border-radius:6px;
+    position:absolute; background:var(--paper); border:1px solid var(--line); border-radius:6px;
     padding:14px 18px; display:flex; align-items:center; gap:12px;
     box-shadow:0 12px 28px -8px rgba(31,42,68,0.18);
   }
@@ -62,7 +99,7 @@
   .float-1{ top:-18px; left:-36px; }
   .float-1 .float-icon{ background:#E9F5EE; color:var(--emerald); }
   .float-2{ bottom:56px; right:-40px; }
-  .float-2 .float-icon{ background:#EAEEF6; color:var(--navy); }
+  .float-2 .float-icon{ background:var(--surface); color:var(--navy); }
   .float-3{ bottom:-20px; left:20px; }
   .float-3 .float-icon{ background:#FDF3E7; color:#B45309; }
   .float-title{ font-size:13.5px; font-weight:600; color:var(--ink); }
@@ -97,7 +134,7 @@
   .about{ background:var(--fog); }
   .about .wrap{ display:grid; grid-template-columns:0.8fr 1.2fr; gap:56px; align-items:center; }
   .about-photo{
-    aspect-ratio:1/1; background:#fff; border:1px solid var(--line); border-radius:4px; overflow:hidden;
+    aspect-ratio:1/1; background:var(--paper); border:1px solid var(--line); border-radius:4px; overflow:hidden;
   }
   .about-photo img{ width:100%; height:100%; object-fit:cover; object-position:top center; }
   .about-copy .eyebrow{ display:block; margin-bottom:14px; }
@@ -113,13 +150,13 @@
   .module h3{ font-size:16px; margin-bottom:6px; }
   .module p{ font-size:13.5px; color:var(--slate); }
 
-  .schedule{ background:var(--navy); padding:80px 0; }
+  .schedule{ background:var(--navy-fill); padding:80px 0; }
   .schedule .wrap{ display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:center; }
   .schedule .eyebrow{ color:#7FD99F; display:block; margin-bottom:14px; }
-  .schedule h2{ color:#fff; font-size:30px; margin-bottom:16px; }
+  .schedule h2{ color:var(--on-navy); font-size:30px; margin-bottom:16px; }
   .schedule p{ color:#B8C0D1; font-size:15px; }
   .schedule-card{ background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.14); border-radius:4px; padding:28px 30px; }
-  .schedule-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-size:14.5px; }
+  .schedule-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.1); color:var(--on-navy); font-size:14.5px; }
   .schedule-row:last-child{ border-bottom:none; }
   .schedule-row .time{ color:#9BA6BC; font-size:13px; }
 
@@ -204,6 +241,15 @@
       <a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2" />
+          <path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+        <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.8 6.8 0 0 0 9.7 9.7Z" />
+        </svg>
+      </button>
       <a href="/Account/Login" class="link-signin">Sign in</a>
       <a href="/Account/Register" class="btn-primary">Apply</a>
     </div>
@@ -383,6 +429,33 @@
     </div>
   </div>
 </footer>
+
+<script>
+  /* Theme toggle. Mirrors window.themeInterop in js/theme.js so the marketing
+     page and the Blazor app share one 'theme' key in localStorage and never
+     disagree about what the visitor picked. */
+  (function () {
+      var btn = document.getElementById('themeToggle');
+      if (!btn) return;
+
+      function current() {
+          return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      }
+
+      function sync() {
+          btn.setAttribute('aria-pressed', current() === 'dark' ? 'true' : 'false');
+      }
+
+      sync();
+
+      btn.addEventListener('click', function () {
+          var next = current() === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          try { localStorage.setItem('theme', next); } catch (e) { /* private mode */ }
+          sync();
+      });
+  })();
+</script>
 
 </body>
 </html>

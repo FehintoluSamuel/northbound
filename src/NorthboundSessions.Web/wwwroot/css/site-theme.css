@@ -1,21 +1,87 @@
-/* site-theme.css — global design tokens + base styles.
-   Load this in App.razor's <head>, after app.css. */
+/* ============================================================================
+   site-theme.css — SINGLE SOURCE OF TRUTH for design tokens + base styles.
+   Loaded in App.razor AFTER bootstrap.min.css and app.css.
 
-   :root {
-    --navy: #243896;
-    --navy-dark: #1A286C;
-    --white: #FFFFFF;
-    --offwhite: #F6F7FB;
-    --ink: #151A2B;
-    --muted: #6B7280;
+   Do NOT redefine any --token declared here in another stylesheet. Two files
+   declaring the same token name caused the original dark-mode bug; a second
+   declaration silently wins by load order.
+
+   THEME MODEL
+   -----------
+   --brand      the brand colour when used as a FILL (button background)
+   --brand-text the brand colour when used as TEXT (headings, links)
+   These are separate tokens because they need different values in dark mode.
+   Collapsing them into one is what made every heading invisible at 1.82:1.
+   ========================================================================== */
+
+:root {
+    /* --- Brand ------------------------------------------------------------ */
+    --brand: #243896;          /* fill: buttons, active nav. white text on it = 10.09:1 */
+    --brand-hover: #1F2F78;
+    --brand-text: #243896;     /* as text: headings, links = 10.09:1 on --bg */
+    --brand-tint: #EEF0FB;     /* subtle background wash */
+    --on-brand: #FFFFFF;       /* text/icons sitting on --brand */
+    --on-brand-muted: #C9D2FF; /* secondary text on --brand = 6.80:1 / 5.34:1 */
+    --on-brand-subtle: #E7DEFB;/* eyebrow/label text on --brand = 7.80:1 / 6.13:1 */
+
+    /* --- Surfaces --------------------------------------------------------- */
+    --bg: #FFFFFF;
+    --surface: #F6F7FB;        /* recessed panels, page insets */
+    --card: #FFFFFF;           /* raised cards */
+    --surface-hover: #EFF1F8;
+
+    /* --- Text ------------------------------------------------------------- */
+    --ink: #151A2B;            /* primary body = 17.29:1 on --bg */
+    --ink-rgb: 21, 26, 43;     /* --ink as a triplet, for Bootstrap's *-rgb vars */
+    --ink-2: #3F4657;          /* secondary body */
+    --muted: #6B7280;          /* captions, meta = 4.83:1 on --bg */
+    --ink-inverse: #FFFFFF;
+
+    /* --- Lines ------------------------------------------------------------ */
     --line: #E7E9F2;
-    --spark: #16A34A;
-    --spark-tint: #E7F6EC;
-    --live: #DC2626;
-    --live-dark: #B91C1C;
-    --live-tint: #FEE2E2;
-    
+    --line-strong: #D3D8E8;
 
+    /* --- Semantic: success / "spark" (green = up moves) -------------------- */
+    --spark: #15803D;          /* as text = 4.69:1 on --surface */
+    --spark-fill: #15803D;     /* as fill, white text on it = 5.02:1 */
+    --spark-tint: #E7F6EC;
+    --on-spark: #FFFFFF;
+
+    /* --- Semantic: danger / "live" (red = down moves, errors) -------------- */
+    --live: #C81E1E;           /* as text = 5.05:1 on --bg */
+    --live-fill: #DC2626;      /* as fill, white text on it = 4.83:1 */
+    --live-tint: #FDECEC;
+    --on-live: #FFFFFF;
+
+    /* --- Semantic: warning + info ----------------------------------------- */
+    --warn: #A16207;
+    --warn-tint: #FEF6E4;
+    --info: #1D4ED8;
+    --info-tint: #E8EEFD;
+
+    /* --- Achievement tiers ------------------------------------------------
+       Darker than their dark-mode counterparts because these are read as
+       text labels on a light surface. */
+    --tier-none: #6B7280;
+    --tier-bronze: #8C5A32;   /* 5.41:1 on --surface */
+    --tier-bronze-tint: #F7EFE8;
+    --tier-silver: #616C7E;   /* 4.96:1 on --surface */
+    --tier-silver-tint: #F0F2F6;
+    --tier-gold: #8A6708;     /* 4.87:1 on --surface */
+    --tier-gold-tint: #FBF3DC;
+
+    /* --- Elevation (shadows are near-invisible on dark; dark uses borders) - */
+    --shadow-sm: 0 1px 2px rgba(21, 26, 43, .06);
+    --shadow-md: 0 2px 8px rgba(21, 26, 43, .08);
+    --shadow-lg: 0 12px 32px -8px rgba(21, 26, 43, .18);
+    --ring: 0 0 0 3px rgba(36, 56, 150, .28);
+
+    /* --- Focus ------------------------------------------------------------ */
+    --focus-color: #243896;
+    --focus-width: 2px;
+    --focus-offset: 2px;
+
+    /* --- Type scale ------------------------------------------------------- */
     --fs-display: 28px;
     --fs-h1: 24px;
     --fs-h2: 18px;
@@ -25,41 +91,154 @@
     --fs-body: 13.5px;
     --fs-small: 12px;
     --fs-micro: 10.5px;
+
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-serif: 'Source Serif 4', Georgia, serif;
+
+    /* --- Spacing scale ---------------------------------------------------- */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
+    --sp-6: 24px;
+    --sp-8: 32px;
+    --sp-10: 40px;
+    --sp-12: 48px;
+
+    /* --- Radius ----------------------------------------------------------- */
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-xl: 20px;
+    --r-pill: 999px;
+
+    /* --- Motion ----------------------------------------------------------- */
+    --ease: cubic-bezier(.4, 0, .2, 1);
+    --dur: 160ms;
+
+    /* --- Layout ----------------------------------------------------------- */
+    --shell-max: 1180px;
+    --topnav-h: 60px;
+    --tabbar-h: 60px;
 }
 
-
-
+/* ==========================================================================
+   DARK THEME
+   Every token above that can affect legibility has an override here. If you
+   add a colour token to :root, add its dark counterpart in the same commit.
+   ========================================================================== */
 [data-theme="dark"] {
-    --white: #12141C;
-    --offwhite: #1B1E29;
-    --ink: #EDEFF7;
-    --muted: #9BA3B8;
+    --brand: #2F47B0;          /* white text on it = 7.93:1 */
+    --brand-hover: #3A4FCE;
+    --brand-text: #AAB4FF;     /* = 9.35:1 on --bg — was 1.82:1 as #243896 */
+    --brand-tint: #1B2140;
+    --on-brand: #FFFFFF;
+    --on-brand-muted: #C9D2FF;
+    --on-brand-subtle: #E7DEFB;
+
+    --bg: #12141C;
+    --surface: #171A24;
+    --card: #1B1E29;
+    --surface-hover: #232735;
+
+    --ink: #EDEFF7;            /* = 16.01:1 on --bg */
+    --ink-rgb: 237, 239, 247;
+    --ink-2: #C3C9DA;
+    --muted: #9BA3B8;          /* = 7.29:1 on --bg */
+    --ink-inverse: #12141C;
+
     --line: #2A2F3F;
-    --spark-tint: #163524;
+    --line-strong: #3A4054;
+
+    --spark: #34D399;          /* = 9.56:1 on --bg */
+    --spark-fill: #15803D;     /* white text on it = 5.02:1 */
+    --spark-tint: #14291F;
+    --on-spark: #FFFFFF;
+
+    --live: #F87171;           /* = 6.64:1 on --bg */
+    --live-fill: #B91C1C;      /* white text on it = 6.48:1 */
+    --live-tint: #2C1517;
+    --on-live: #FFFFFF;
+
+    --warn: #FBBF24;
+    --warn-tint: #2A2013;
+    --info: #93B4FD;
+    --info-tint: #141D33;
+
+    --tier-none: #9BA3B8;
+    --tier-bronze: #C08552;
+    --tier-bronze-tint: #241A12;
+    --tier-silver: #A8B2C1;
+    --tier-silver-tint: #1B1E26;
+    --tier-gold: #E0B84D;
+    --tier-gold-tint: #26200F;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, .45);
+    --shadow-lg: 0 12px 32px -8px rgba(0, 0, 0, .6);
+    --ring: 0 0 0 3px rgba(170, 180, 255, .35);
+
+    --focus-color: #AAB4FF;
 }
 
+/* ==========================================================================
+   Base
+   ========================================================================== */
 * {
     box-sizing: border-box;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
 body {
     margin: 0;
-    background: var(--white);
+    background: var(--bg);
     color: var(--ink);
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    /* Prevent the mobile bottom tab bar from covering page content. */
+    overflow-wrap: break-word;
 }
 
 h1, h2, h3 {
-    font-family: 'Source Serif 4', serif;
+    font-family: var(--font-serif);
     margin: 0;
-    color: var(--navy);
+    color: var(--brand-text);
+    letter-spacing: -.01em;
 }
 
 h1 { font-size: var(--fs-h1); line-height: 1.2; font-weight: 600; }
 h2 { font-size: var(--fs-h2); line-height: 1.3; font-weight: 600; }
+h3 { font-size: var(--fs-h3); line-height: 1.4; font-weight: 700; }
+
+p { margin: 0; }
+
+a {
+    text-decoration: none;
+    color: var(--brand-text);
+}
+
+a:hover { text-decoration: underline; }
+
+/* Visible focus for keyboard users on every interactive element. Several
+   pages previously had no focus affordance at all. */
+:focus-visible {
+    outline: var(--focus-width) solid var(--focus-color);
+    outline-offset: var(--focus-offset);
+    border-radius: var(--r-sm);
+}
+
+img { max-width: 100%; }
+
+button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 .text-h3 {
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-sans);
     font-size: var(--fs-h3);
     line-height: 1.4;
     font-weight: 700;
@@ -67,11 +246,11 @@ h2 { font-size: var(--fs-h2); line-height: 1.3; font-weight: 600; }
 }
 
 .text-stat {
-    font-family: 'Source Serif 4', serif;
+    font-family: var(--font-serif);
     font-size: var(--fs-stat);
     line-height: 1.1;
     font-weight: 700;
-    color: var(--navy);
+    color: var(--brand-text);
 }
 
 .text-body-lg { font-size: var(--fs-body-lg); line-height: 1.6; }
@@ -79,38 +258,152 @@ h2 { font-size: var(--fs-h2); line-height: 1.3; font-weight: 600; }
 .text-small { font-size: var(--fs-small); line-height: 1.4; font-weight: 500; color: var(--muted); }
 .text-micro { font-size: var(--fs-micro); line-height: 1.3; font-weight: 600; letter-spacing: .1px; color: var(--muted); }
 
-button {
-    font-family: 'Inter', sans-serif;
-}
-
-a {
-    text-decoration: none;
-}
-
 .container {
-    max-width: 1180px;
+    max-width: var(--shell-max);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--sp-5);
+}
+
+/* Screen-reader-only text for icon-only controls. */
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 200;
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+    border-radius: 0 0 var(--r-md) 0;
+}
+
+.skip-link:focus {
+    left: 0;
+    text-decoration: none;
 }
 
 /* Placeholder block for any image slot not yet wired to a real asset. */
 .imgph {
     position: relative;
-    background: repeating-linear-gradient(135deg, #D9DEFB 0 14px, #E9EBFB 14px 28px);
+    background: repeating-linear-gradient(135deg, var(--brand-tint) 0 14px, var(--surface) 14px 28px);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--navy-dark);
+    color: var(--brand-text);
     text-align: center;
     font-size: 12px;
     font-weight: 600;
-    border: 1.5px dashed #B7C0FA;
+    border: 1.5px dashed var(--line-strong);
 }
 
 .imgph span {
-    background: rgba(255, 255, 255, .85);
+    background: var(--card);
     padding: 5px 10px;
-    border-radius: 6px;
+    border-radius: var(--r-sm);
     max-width: 82%;
     line-height: 1.4;
+}
+
+/* Shared empty / loading / error states. */
+.empty-state {
+    padding: var(--sp-6);
+    text-align: center;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--r-md);
+}
+
+/* ============================================================================
+   SHARED LIST / PAGE PRIMITIVES
+
+   These used to be copy-pasted into each page's scoped .razor.css
+   (SessionsList, ViewAllLessons, Quizzes) — three byte-identical copies of the
+   same fifteen rules. Scoped CSS attributes those rules to one component only,
+   so the duplication was invisible until the copies drifted. They live here
+   instead so a fix applies everywhere at once.
+
+   Pages keep only their own additions (e.g. .score-chip, .status-icon.missed).
+   ========================================================================== */
+.page-header { padding: var(--sp-5) 0 var(--sp-1); }
+.page-header h1 { font-size: var(--fs-h1); }
+
+.section { padding: var(--sp-5) 0; }
+.section-head h2 { font-size: var(--fs-h2); margin-bottom: 12px; }
+
+.list {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card);
+}
+
+/* .list-item is a real <a> so keyboard users can reach it and can open it in
+   a new tab. That means the UA's blue + underline must be reset. */
+.list-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    color: inherit;
+    text-decoration: none;
+    transition: background .15s ease;
+}
+
+.list-item:hover { text-decoration: none; background: var(--surface); }
+.list-item:last-child { border-bottom: none; }
+.list-item:focus-visible { outline: 2px solid var(--focus-color); outline-offset: -2px; }
+
+.list-title {
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+    /* Long lesson/topic titles must wrap rather than push the row wide. */
+    overflow-wrap: anywhere;
+}
+
+.list-body { flex: 1; min-width: 0; }
+
+.status-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.status-icon.done    { background: var(--spark-tint); color: var(--spark); }
+.status-icon.pending { background: var(--surface); color: var(--brand-text); border: 1px solid var(--line); }
+
+/* ---- Shared page/list responsive behaviour --------------------------------
+   Phones: trim the gutter and the row padding so rows keep a usable tap
+   target without the text column collapsing to nothing. */
+@media (max-width: 560px) {
+    .page-header { padding: var(--sp-4) 0 var(--sp-1); }
+    .section { padding: var(--sp-4) 0; }
+    .list-item { padding: 13px 13px; gap: 11px; }
+    .empty-state { padding: var(--sp-5) var(--sp-4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
 }

@@ -1,0 +1,66 @@
+/* ManageLayout.razor.css — centred card shell for /Account/Manage pages. */
+
+.manage-shell {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-6) var(--sp-4) var(--sp-10);
+    background: var(--surface);
+    color: var(--ink);
+}
+
+.manage-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    color: var(--brand-text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    margin-bottom: var(--sp-6);
+}
+
+.manage-shell h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--brand-text);
+    margin: 0 0 var(--sp-4);
+    text-align: center;
+}
+
+.manage-card {
+    width: 100%;
+    max-width: 880px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--sp-6);
+}
+
+.manage-card h2 {
+    font-size: 16px;
+    font-weight: 650;
+    color: var(--ink);
+    margin: 0;
+}
+
+.manage-card hr {
+    border: 0;
+    border-top: 1px solid var(--line);
+    margin: var(--sp-4) 0;
+}
+
+@media (max-width: 860px) {
+    .manage-shell { padding: var(--sp-5) var(--sp-3) var(--sp-8); }
+    .manage-card { padding: var(--sp-5) var(--sp-4); }
+    /* Stack the settings nav above the panel instead of a 3/9 split. */
+    .manage-card .col-lg-3,
+    .manage-card .col-lg-9 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .manage-card .col-lg-3 { margin-bottom: var(--sp-4); }
+}

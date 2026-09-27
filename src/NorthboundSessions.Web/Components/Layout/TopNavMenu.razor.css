@@ -5,7 +5,7 @@
 
 /* ---------- Top nav ---------- */
 .topnav {
-    background: var(--navy);
+    background: var(--brand);
     padding: 14px 0;
     position: sticky;
     top: 0;
@@ -25,16 +25,28 @@
 .brand {
     display: flex;
     align-items: center;
+    color: var(--on-brand);
+    text-decoration: none;
 }
 
-/* Desktop nav-links removed — bottom tab bar stays fixed and visible
-   on every screen size now, so a duplicate top-nav link set isn't needed. */
+/* Desktop nav links: hidden while the bottom tab bar is in use
+   (<=899px), restored on desktop where there's room for text labels.
+   Selector uses `div.nav-links` (not `nav.nav-links`) because the links
+   live in a plain div now — nesting a <nav> inside a <nav> is invalid.
+
+   ::deep is required on every rule that targets the <a>: those anchors are
+   rendered by the NavLink child component, so they do NOT carry this
+   component's scope attribute. Writing `div.nav-links a` put the attribute
+   on the <a> (`.nav-links a[b-x]`), which never matched — the links fell
+   back to the global `a { color: var(--brand-text) }` and rendered navy-on-
+   navy, i.e. invisible in light mode. `::deep` moves the attribute onto the
+   .nav-links div, which is ours. */
 .nav-links {
     display: none;
 }
 
-nav.nav-links a {
-    color: #C9D2FF;
+div.nav-links ::deep a {
+    color: var(--on-brand-muted);
     font-family: 'Inter', sans-serif;
     font-size: 13.5px;
     font-weight: 600;
@@ -44,13 +56,22 @@ nav.nav-links a {
     transition: color .15s ease, border-color .15s ease;
 }
 
-nav.nav-links a:hover {
-    color: #fff;
+div.nav-links ::deep a:hover {
+    color: var(--on-brand);
 }
 
-nav.nav-links a.active {
-    color: #fff;
+div.nav-links ::deep a.active {
+    color: var(--on-brand);
     border-color: var(--spark);
+}
+
+div.nav-links ::deep a:focus-visible,
+.brand:focus-visible,
+.icon-btn:focus-visible,
+.avatar-ring:focus-visible {
+    outline: 2px solid var(--on-brand);
+    outline-offset: 3px;
+    border-radius: 6px;
 }
 
 .nav-right {
@@ -69,7 +90,7 @@ nav.nav-links a.active {
 }
 
 .icon-btn svg {
-    stroke: #fff;
+    stroke: var(--on-brand);
 }
 
 .bell-dot {
@@ -80,14 +101,19 @@ nav.nav-links a.active {
     height: 8px;
     border-radius: 50%;
     background: var(--spark);
-    border: 1.5px solid var(--navy);
+    border: 1.5px solid var(--brand);
 }
 
+/* The whole avatar is now the link, so it needs to size and position
+   its own ring/fill rather than wrapping a link in a div. */
 .avatar-ring {
     position: relative;
+    display: block;
     width: 38px;
     height: 38px;
     flex-shrink: 0;
+    border-radius: 50%;
+    text-decoration: none;
 }
 
 .ring {
@@ -113,18 +139,26 @@ nav.nav-links a.active {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: var(--offwhite);
+    background: var(--surface);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 11px;
     font-weight: 700;
-    color: var(--navy);
+    color: var(--brand-text);
 }
 
 
 
-/* Bottom tab bar now lives in NavMenu.razor / NavMenu.razor.css */
+/* Bottom tab bar now lives in NavMenu.razor / NavMenu.razor.css
 
-/* Bottom tab bar and top nav are both fixed and visible on every
-   screen size — mobile and desktop alike. No breakpoint swap. */
+   Breakpoint swap: bottom icon tab bar on small screens, text nav in the
+   top bar on >=900px. Only one of the two is displayed at a time, so only
+   one is exposed to screen readers. */
+@media (min-width: 900px) {
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+    }
+}

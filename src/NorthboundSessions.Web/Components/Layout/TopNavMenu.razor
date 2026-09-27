@@ -12,27 +12,28 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JS
 
-<nav class="topnav">
+<nav class="topnav" aria-label="Primary">
         <div class="topnav-inner">
 
-            <a href="/dashboard" class="brand">
+            <a href="/dashboard" class="brand" aria-label="Northbound, go to dashboard">
                 <svg width="24" height="24" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-                    <circle cx="13" cy="13" r="11.5" stroke="#fff" stroke-width="1.6" />
-                    <path d="M13 5.5L15.5 13L13 20.5L10.5 13L13 5.5Z" fill="#fff" />
-                    <circle cx="13" cy="13" r="1.6" fill="#16A34A" />
+                    <circle cx="13" cy="13" r="11.5" stroke="currentColor" stroke-width="1.6" />
+                    <path d="M13 5.5L15.5 13L13 20.5L10.5 13L13 5.5Z" fill="currentColor" />
+                    <circle cx="13" cy="13" r="1.6" fill="var(--spark)" />
                 </svg>
             </a>
 
-            <nav class="nav-links" aria-label="Primary">
+            <div class="nav-links">
                 <NavLink href="/dashboard" Match="NavLinkMatch.All">Dashboard</NavLink>
-                <NavLink href="/lessons">Lessons</NavLink>
+                <NavLink href="/view-all-lessons">Lessons</NavLink>
                 <NavLink href="/quizzes">Quizzes</NavLink>
-                <NavLink href="/sessions">Sessions</NavLink>
+                <NavLink href="/all-sessions">Sessions</NavLink>
                 <NavLink href="/progress">Progress</NavLink>
-            </nav>
+            </div>
 
             <div class="nav-right">
-                <button class="icon-btn" @onclick="ToggleTheme" aria-label="Toggle dark mode">
+                <button class="icon-btn" @onclick="ToggleTheme" aria-label="Toggle dark mode"
+                        aria-pressed="@IsDark.ToString().ToLowerInvariant()">
                     @if (IsDark)
                     {
                         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true">
@@ -60,17 +61,15 @@
                     }
                 </button>
 
-                <div class="avatar-ring" title="@DisplayName">
-                    <a href="/profile" >
-                        <svg class="ring" width="38" height="38" viewBox="0 0 38 38" aria-hidden="true">
-                            <circle cx="19" cy="19" r="16" class="ring-track" fill="none" stroke-width="3" />
-                            <circle cx="19" cy="19" r="16" class="ring-progress" fill="none" stroke-width="3"
-                                    stroke-dasharray="100.5" stroke-dashoffset="@RingOffset" stroke-linecap="round" />
-                        </svg>
-                    </a>
-                    <div class="avatar-fill">@Initials</div>
-                    
-                </div>
+                <a href="/profile" class="avatar-ring" title="@DisplayName"
+                   aria-label="Your profile (@DisplayName)">
+                    <svg class="ring" width="38" height="38" viewBox="0 0 38 38" aria-hidden="true">
+                        <circle cx="19" cy="19" r="16" class="ring-track" fill="none" stroke-width="3" />
+                        <circle cx="19" cy="19" r="16" class="ring-progress" fill="none" stroke-width="3"
+                                stroke-dasharray="100.5" stroke-dashoffset="@RingOffset" stroke-linecap="round" />
+                    </svg>
+                    <span class="avatar-fill">@Initials</span>
+                </a>
             </div>
 
         </div>
@@ -122,7 +121,6 @@
 
     private async Task ToggleTheme()
     {
-        Console.WriteLine("TOGGLE CLICKED");
         IsDark = !IsDark;
         await JS.InvokeVoidAsync("themeInterop.setTheme", IsDark ? "dark" : "light");
     }

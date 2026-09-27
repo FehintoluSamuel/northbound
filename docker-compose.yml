@@ -1,17 +1,23 @@
-# Local development only — spins up a SQL Server instance that mirrors
-# what Azure SQL Database provides in production. Run: docker compose up -d
-version: "3.9"
+# Local development only — spins up a PostgreSQL instance, which is what the
+# app actually uses (Npgsql provider + Postgres migrations). Run:
+#   docker compose up -d
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "LocalDevPassword1!"
+      POSTGRES_DB: northbound_dev
+      POSTGRES_USER: northbound
+      POSTGRES_PASSWORD: LocalDevPassword1!
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - northbound-db-data:/var/opt/mssql
+      - northbound-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U northbound -d northbound_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
 volumes:
   northbound-db-data:

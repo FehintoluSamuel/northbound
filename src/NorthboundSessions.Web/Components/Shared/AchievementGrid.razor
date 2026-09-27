@@ -1,0 +1,66 @@
+@* AchievementGrid.razor — the achievement wall.
+   Shared by Dashboard and Progress so the badge styling lives in one place. *@
+
+@using NorthboundSessions.Web.Services
+
+<div class="ach-grid" role="list">
+    @foreach (var state in Sorted)
+    {
+        var def = state.Definition;
+        var tier = TierClass(def.Tier);
+        var a11yLabel = def.Name + (state.Unlocked ? ", earned" : ", locked");
+
+        <div class="ach @(state.Unlocked ? "is-unlocked" : "is-locked") @tier"
+             role="listitem"
+             aria-label="@a11yLabel">
+
+            <div class="ach-medal">
+                <div class="ach-medal-inner">
+                    <AchievementIcon Name="@def.Icon" Size="26" />
+                </div>
+                @if (state.Unlocked)
+                {
+                    <span class="ach-check" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none"
+                             stroke="currentColor" stroke-width="3.4"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m4 12.5 5 5L20 6.5" />
+                        </svg>
+                    </span>
+                }
+            </div>
+
+            <div class="ach-name">@def.Name</div>
+            <div class="ach-desc">@def.Description</div>
+
+            @if (!state.Unlocked && def.Goal > 0)
+            {
+                <div class="ach-track" role="presentation">
+                    <span class="ach-fill" style="width:@($"{state.Percent:0}%")"></span>
+                </div>
+                <div class="ach-goal text-micro">
+                    @state.Current / @def.Goal
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<AchievementState> Items { get; set; } = Array.Empty<AchievementState>();
+
+    /// <summary>When true, earned achievements are listed first.</summary>
+    [Parameter] public bool EarnedFirst { get; set; } = true;
+
+    private IEnumerable<AchievementState> Sorted => EarnedFirst
+        ? Items.OrderByDescending(i => i.Unlocked).ThenBy(i => (int)i.Definition.Tier).ThenBy(i => i.Definition.Name)
+        : Items.OrderBy(i => (int)i.Definition.Tier).ThenBy(i => i.Definition.Name);
+
+    private static string TierClass(AchievementTier tier) => tier switch
+    {
+        AchievementTier.Bronze => "tier-bronze",
+        AchievementTier.Silver => "tier-silver",
+        AchievementTier.Gold   => "tier-gold",
+        _                     => "tier-none",
+    };
+}
