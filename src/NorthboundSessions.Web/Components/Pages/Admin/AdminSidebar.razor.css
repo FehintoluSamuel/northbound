@@ -1,0 +1,182 @@
+/* AdminSidebar.razor.css — scoped to the admin drawer's own markup.
+
+   Selectors are prefixed (a.nav-item, .sidebar a.nav-item) to outrank
+   Bootstrap's plain `a { color }` rule, same pattern used across the
+   student-facing nav components.
+
+   The hamburger is position:fixed so that, although this component renders as
+   a sibling inside AdminLayout's .admin-shell flex container, it drops out of
+   the flex flow and can sit on top of the top bar. It is z-index 30 so the
+   backdrop (35) and drawer (40) cover it while the drawer is open. */
+
+.backdrop {
+    display: none;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--card);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 14px;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 10px 22px;
+    position: relative;
+}
+
+.sidebar-brand span {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--brand-text);
+}
+
+.close-btn {
+    display: none;
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.nav-section-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: .4px;
+    padding: 14px 12px 6px;
+    text-transform: uppercase;
+}
+
+.sidebar a.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    border-left: 3px solid transparent;
+    text-decoration: none;
+}
+
+.sidebar a.nav-item svg {
+    stroke: var(--muted);
+    flex-shrink: 0;
+}
+
+.sidebar a.nav-item:hover {
+    background: var(--surface);
+}
+
+.sidebar a.nav-item.active {
+    background: var(--brand-tint);
+    color: var(--brand-text);
+    border-left-color: var(--brand);
+}
+
+.sidebar a.nav-item.active svg {
+    stroke: var(--brand-text);
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid var(--line);
+}
+
+.admin-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: var(--on-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.admin-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.admin-role {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--ink);
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* ---------- Mobile fallback (<900px): off-canvas drawer ---------- */
+@media (max-width: 900px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 40;
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .close-btn {
+        display: block;
+    }
+
+    /* Matches where the hamburger used to sit in the top bar's flex row
+       (topbar padding 12px/16px, 4px button padding, 20px icon). */
+    .hamburger-btn {
+        display: block;
+        position: fixed;
+        top: 12px;
+        left: 16px;
+        z-index: 30;
+    }
+
+    .backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        margin: 0;
+        background: rgba(21, 26, 43, .4);
+        z-index: 35;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+}

@@ -1,0 +1,130 @@
+@* AdminSidebar.razor — the admin drawer's interactive half.
+
+   It lives in its own component rather than in AdminLayout because a layout
+   cannot be interactive: it sits outside the render-mode boundary a routable
+   page's @rendermode creates, and putting @rendermode on the layout itself
+   throws ("Cannot pass the parameter 'Body' ..."). Declaring the mode here
+   gives the hamburger, backdrop, close button and nav items a real circuit,
+   mirroring TopNavMenu.razor.
+
+   Renders three siblings into AdminLayout's .admin-shell: the backdrop, the
+   <aside>, and the hamburger. No wrapper element, so the flex layout of the
+   shell is unchanged. The hamburger is position:fixed so it drops out of the
+   shell's flex flow and can sit over the top bar. *@
+@rendermode InteractiveServer
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+@if (SidebarOpen)
+{
+    <button class="backdrop" @onclick="CloseSidebar" aria-label="Close navigation menu"></button>
+}
+
+<aside class="sidebar @(SidebarOpen ? "open" : "")" aria-label="Admin navigation">
+    <div class="sidebar-brand">
+        <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+            <circle cx="13" cy="13" r="11.5" stroke="var(--brand-text)" stroke-width="1.6" />
+            <path d="M13 5.5L15.5 13L13 20.5L10.5 13L13 5.5Z" fill="var(--brand-text)" />
+            <circle cx="13" cy="13" r="1.6" fill="var(--spark)" />
+        </svg>
+        <span>Northbound Admin</span>
+        <button class="close-btn" @onclick="CloseSidebar" aria-label="Close menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
+    </div>
+
+    <div class="nav-section-label">Overview</div>
+    <NavLink class="nav-item" href="/admin/reporting" Match="NavLinkMatch.All" @onclick="CloseSidebar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18" /><path d="M7 15l4-6 4 4 5-8" /></svg>
+        Student progress
+    </NavLink>
+
+    <div class="nav-section-label">Create</div>
+    <NavLink class="nav-item" href="/admin/lessons/create" @onclick="CloseSidebar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" /></svg>
+        New lesson
+    </NavLink>
+    <NavLink class="nav-item" href="/admin/topics/create" @onclick="CloseSidebar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+        New topic
+    </NavLink>
+    @* "/admin/sessions/create" was linked here but no such page exists,
+       so this was a guaranteed 404. Pointed at the sessions list. *@
+    <NavLink class="nav-item" href="/all-sessions" @onclick="CloseSidebar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+        Live sessions
+    </NavLink>
+
+    <div class="sidebar-footer">
+        <div class="admin-avatar">@Initials</div>
+        <div>
+            <div class="admin-name">@DisplayName</div>
+            <div class="admin-role">Instructor</div>
+        </div>
+    </div>
+</aside>
+
+<button class="hamburger-btn" @onclick="OpenSidebar" aria-label="Open menu"
+        aria-expanded="@SidebarOpen.ToString().ToLowerInvariant()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+</button>
+
+@code {
+    private bool SidebarOpen;
+    private string DisplayName = string.Empty;
+    private string Initials = "?";
+    private bool _escapeRegistered;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity?.Name ?? string.Empty;
+        DisplayName = email;
+
+        var localPart = email.Contains('@') ? email[..email.IndexOf('@')] : email;
+        Initials = localPart.Length >= 2
+            ? localPart[..2].ToUpperInvariant()
+            : localPart.ToUpperInvariant().PadRight(2, '?');
+    }
+
+    // Escape closes the drawer. Has to happen in OnAfterRenderAsync, not
+    // OnInitializedAsync: this component is prerendered, and JS interop is
+    // illegal while statically rendering.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !RendererInfo.IsInteractive || _escapeRegistered)
+        {
+            return;
+        }
+
+        // No DotNetObjectReference is passed — admin-nav.js dispatches a click
+        // on the close control instead, so there is no callback to get stale.
+        await JS.InvokeVoidAsync("adminNav.registerEscape");
+        _escapeRegistered = true;
+    }
+
+    private void OpenSidebar() => SidebarOpen = true;
+
+    private void CloseSidebar() => SidebarOpen = false;
+
+    public async ValueTask DisposeAsync()
+    {
+        // Only tear down the listener if this instance actually registered
+        // one — the prerender pass never did, and calling interop there throws.
+        if (!_escapeRegistered)
+        {
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("adminNav.unregisterEscape");
+        }
+        catch (Exception ex) when (ex is JSDisconnectedException or InvalidOperationException or ObjectDisposedException)
+        {
+            // Circuit already gone; the document listener dies with the page.
+        }
+
+        _escapeRegistered = false;
+    }
+}
