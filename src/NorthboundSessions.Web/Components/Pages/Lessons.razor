@@ -166,15 +166,40 @@ else if (CurrentLesson is not null)
     {
         if (firstRender)
         {
-            var current = await JS.InvokeAsync<string>("themeInterop.getTheme");
-            IsDark = current == "dark";
+            try
+            {
+                var current = await JS.InvokeAsync<string>("themeInterop.getTheme");
+                IsDark = current == "dark";
+            }
+            catch (Exception ex)
+            {
+                // Cosmetic only — never let this freeze the lesson.
+                Console.WriteLine($"Theme init failed: {ex.Message}");
+            }
+
             StateHasChanged();
         }
 
         if (CurrentLesson?.MarketSymbol is not null && !_chartRendered)
         {
+            // Set first: a failed chart must not be retried on every render.
             _chartRendered = true;
-            await JS.InvokeVoidAsync("renderTradingViewWidget", "tv-chart", CurrentLesson.MarketSymbol);
+
+            try
+            {
+                // Was "renderTradingViewWidget", which no longer exists in
+                // tradingview-widget.js — the function is initTradingViewWidget.
+                // The resulting JSException propagated out of this method and
+                // killed the circuit, which is why Next stopped responding on
+                // any lesson that has a market symbol.
+                await JS.InvokeVoidAsync("initTradingViewWidget", "tv-chart", CurrentLesson.MarketSymbol);
+            }
+            catch (Exception ex)
+            {
+                // An unhandled exception here is fatal to the circuit, so the
+                // chart is allowed to fail but never the page.
+                Console.WriteLine($"Chart failed to load: {ex.Message}");
+            }
         }
     }
 
