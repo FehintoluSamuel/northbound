@@ -7,11 +7,17 @@
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Data
 @using NorthboundSessions.Web.Data
+@using NorthboundSessions.Web.Services
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject NavigationManager Nav
 
 <div class="page-title-row"><h1>Add a topic to the bank</h1></div>
 <div class="page-sub">Reusable lesson material for LessonGeneratorService to draw from on scheduled days.</div>
+
+@if (ErrorMessage is not null)
+{
+    <div class="alert error">@ErrorMessage</div>
+}
 
 <EditForm Model="this" FormName="CreateTopic" OnValidSubmit="SaveTopic">
 
@@ -24,8 +30,8 @@
         <label class="field-label">Outline content</label>
         <InputTextArea @bind-Value="newTopic.OutlineContent" rows="6" class="text-area" />
 
-        <label class="field-label">Market symbol <span class="optional">(optional, e.g. NYSE:NKE)</span></label>
-        <InputText @bind-Value="newTopic.MarketSymbol" class="text-input" />
+        <label class="field-label">Market symbol <span class="optional">(optional, EXCHANGE:TICKER e.g. NSENG:DANGCEM)</span></label>
+        <InputText @bind-Value="newTopic.MarketSymbol" class="text-input" placeholder="EXCHANGE:TICKER, e.g. NSENG:DANGCEM" />
 
         <label class="field-label">Lesson image <span class="optional">(optional, 16:9 works best, e.g. 800×450)</span></label>
         <div class="image-upload-row">
@@ -94,11 +100,25 @@
 
     private async Task SaveTopic()
     {
+        // LessonGeneratorService copies this straight onto the generated
+        // Lesson, so a malformed symbol here reaches the chart just as surely
+        // as one typed on the lesson form. Normalise and reject up front.
+        if (!MarketSymbolService.TryNormalize(newTopic.MarketSymbol, out var normalizedSymbol, out var symbolError))
+        {
+            ErrorMessage = symbolError;
+            return;
+        }
+
+        ErrorMessage = null;
+        newTopic.MarketSymbol = normalizedSymbol;
+
         await using var context = await DbFactory.CreateDbContextAsync();
         context.TopicBankItems.Add(newTopic);
         await context.SaveChangesAsync();
         Nav.NavigateTo("/admin/topics/create");
     }
+
+    private string? ErrorMessage;
 
     private string? imagePreviewUrl;
 

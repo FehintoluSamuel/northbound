@@ -39,8 +39,8 @@
             <input class="text-input" type="date" @bind="ReleaseDateInput" />
         </div>
         <div>
-            <label class="field-label">Market symbol <span class="optional">(optional)</span></label>
-            <input class="text-input" @bind="MarketSymbol" placeholder="EXCHANGE:TICKER, e.g. NYSE:NKE" />
+            <label class="field-label">Market symbol <span class="optional">(optional, EXCHANGE:TICKER e.g. NSENG:DANGCEM)</span></label>
+            <input class="text-input" @bind="MarketSymbol" placeholder="EXCHANGE:TICKER, e.g. NSENG:DANGCEM" />
         </div>
     </div>
 
@@ -180,6 +180,16 @@
             return;
         }
 
+        // Reject a malformed symbol before anything is written, and store the
+        // cleaned-up form. TradingView silently renders no chart for anything
+        // that is not EXCHANGE:TICKER, so "NGSE : DANGCEM" would otherwise be
+        // saved and look like a broken lesson later.
+        if (!MarketSymbolService.TryNormalize(MarketSymbol, out var normalizedSymbol, out var symbolError))
+        {
+            ErrorMessage = symbolError;
+            return;
+        }
+
         var realQuestions = Questions
             .Where(q => !string.IsNullOrWhiteSpace(q.Text))
             .ToList();
@@ -209,7 +219,7 @@
             {
                 Title = Title,
                 OutlineContent = OutlineContent,
-                MarketSymbol = string.IsNullOrWhiteSpace(MarketSymbol) ? null : MarketSymbol,
+                MarketSymbol = normalizedSymbol,
                 ReleaseDate = DateOnly.FromDateTime(ReleaseDateInput),
                 IsLiveDay = IsLiveDay,
                 ImageBytes = LessonImageBytes
