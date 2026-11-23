@@ -6,6 +6,7 @@ COPY NorthboundSessions.slnx .
 COPY src/NorthboundSessions.Web/*.csproj src/NorthboundSessions.Web/
 COPY src/NorthboundSessions.Data/*.csproj src/NorthboundSessions.Data/
 COPY src/NorthboundSessions.Jobs/*.csproj src/NorthboundSessions.Jobs/
+COPY tests/NorthboundSessions.Tests/*.csproj tests/NorthboundSessions.Tests/
 RUN dotnet restore NorthboundSessions.slnx
 
 COPY . .
