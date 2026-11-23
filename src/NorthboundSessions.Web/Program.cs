@@ -62,6 +62,7 @@ builder.Services.AddScoped<LessonProgressService>();
 builder.Services.AddScoped<AchievementService>();
 builder.Services.AddScoped<StudentStatsService>();
 builder.Services.AddScoped<LandingPageService>();
+builder.Services.AddScoped<LessonBankSeeder>();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
@@ -83,6 +84,9 @@ using (var scope = app.Services.CreateScope())
     using var dbContext = dbContextFactory.CreateDbContext();
     dbContext.Database.SetConnectionString(migrationConnectionString);
     dbContext.Database.Migrate();
+
+    var lessonBankSeeder = scope.ServiceProvider.GetRequiredService<LessonBankSeeder>();
+    await lessonBankSeeder.SeedAsync();
 }
 
 // Configure the HTTP request pipeline.
