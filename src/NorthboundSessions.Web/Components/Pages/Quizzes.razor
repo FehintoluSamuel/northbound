@@ -7,7 +7,6 @@
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Data
 @using NorthboundSessions.Web.Services
-@using NorthboundSessions.Data
 @using NorthboundSessions.Web.Data
 @attribute [Authorize]
 
@@ -76,7 +75,7 @@
         // Only quizzes belonging to already-released lessons are shown at all.
         var quizzes = await db.Quizzes
             .Include(q => q.Lesson)
-            .Where(q => q.Lesson.ReleaseDate <= DateOnly.FromDateTime(DateTime.UtcNow))
+            .Where(q => q.Lesson != null && q.Lesson.ReleaseDate <= DateOnly.FromDateTime(DateTime.UtcNow))
             .ToListAsync();
 
         var attemptRows = string.IsNullOrEmpty(studentId)

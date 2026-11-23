@@ -253,6 +253,169 @@ namespace NorthboundSessions.Web.Migrations
                     b.ToTable("BankQuestions");
                 });
 
+            modelBuilder.Entity("NorthboundSessions.Data.CurriculumModule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CurriculumModules");
+                });
+
+            modelBuilder.Entity("NorthboundSessions.Data.FaqItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FaqItems");
+                });
+
+            modelBuilder.Entity("NorthboundSessions.Data.Instructor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Bio")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ContactEmail")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("GithubUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Headline")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LinkedInUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MarketFocus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhotoUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("YearsTeaching")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("YearsTrading")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Instructors");
+                });
+
+            modelBuilder.Entity("NorthboundSessions.Data.LandingPageContent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CurriculumHeading")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CurriculumIntro")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FaqHeading")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FinalCtaHeading")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FinalCtaText")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HeroAccent")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HeroEyebrow")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HeroImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HeroSubheadline")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HeroTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LandingPageContents");
+                });
+
             modelBuilder.Entity("NorthboundSessions.Data.Lesson", b =>
                 {
                     b.Property<int>("Id")
@@ -446,6 +609,53 @@ namespace NorthboundSessions.Web.Migrations
                     b.HasIndex("QuizId");
 
                     b.ToTable("QuizQuestions");
+                });
+
+            modelBuilder.Entity("NorthboundSessions.Data.RealtimeProbe", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RealtimeProbes");
+                });
+
+            modelBuilder.Entity("NorthboundSessions.Data.Testimonial", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Attribution")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Quote")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Testimonials");
                 });
 
             modelBuilder.Entity("NorthboundSessions.Data.TopicBankItem", b =>

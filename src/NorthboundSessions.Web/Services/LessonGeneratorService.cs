@@ -1,27 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore; 
-using NorthboundSessions.Data; 
-using NorthboundSessions.Web.Data; 
-
+using Microsoft.EntityFrameworkCore;
+using NorthboundSessions.Data;
+using NorthboundSessions.Web.Data;
 
 namespace NorthboundSessions.Web.Services
 {
     public class LessonGeneratorService
     {
-        //Create the service shell using the db
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
 
         public LessonGeneratorService(IDbContextFactory<ApplicationDbContext> dbFactory)
         {
             _dbFactory = dbFactory;
         }
-        //Create a lesson
-        public async Task<Lesson?>GenerateNextLessonAsync()
+
+        public async Task<Lesson?> GenerateNextLessonAsync()
         {
             await using var context = await _dbFactory.CreateDbContextAsync();
+            await using var transaction = await context.Database.BeginTransactionAsync();
 
             //Find the next unused topic
             var nextTopic = await context.TopicBankItems
@@ -67,9 +62,9 @@ namespace NorthboundSessions.Web.Services
                 } 
             context.Quizzes.Add(quiz); 
             
-            //Mark the topic used, save everything, return the lesson
-            nextTopic.IsUsed = true; 
-            await context.SaveChangesAsync(); 
+            nextTopic.IsUsed = true;
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
             return lesson;
         }
 

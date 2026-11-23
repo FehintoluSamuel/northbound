@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "build": "dotnet build NorthboundSessions.slnx --configuration Release",
+    "test": "dotnet test NorthboundSessions.slnx --no-build --configuration Release",
+    "realtime:check": "node scripts/neon-realtime-check.mjs"
+  },
+  "dependencies": {
+    "@neon/config": "^1.14.6",
+    "@neon/env": "^2.1.9",
+    "@neon/realtime": "^0.2.1",
+    "ws": "^8.23.0"
+  }
+}

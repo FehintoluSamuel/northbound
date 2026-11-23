@@ -4,6 +4,7 @@
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @inject AchievementService Achievements
+@inject StudentStatsService Stats
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Data
 @using Microsoft.AspNetCore.Authorization
@@ -278,20 +279,12 @@
             .Where(a => a.StudentId == _studentId)
             .ToListAsync();
 
-        var quizIds = attempts.Select(a => a.QuizId).Distinct().ToList();
-        var questionCounts = await db.QuizQuestions
-            .Where(q => quizIds.Contains(q.QuizId))
-            .GroupBy(q => q.QuizId)
-            .Select(g => new { QuizId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.QuizId, x => x.Count);
+        var stats = await Stats.GetStatsAsync(_studentId);
+        LessonsCompletedCount = stats.CompletedLessons;
+        AverageQuizScore = stats.AverageQuizScore;
+        SessionsAttendedCount = stats.SessionsAttended;
 
-        double ToPercent(QuizAttempt a) =>
-            questionCounts.TryGetValue(a.QuizId, out var total) && total > 0
-                ? a.Score * 100.0 / total : 0;
-
-        LessonsCompletedCount = attempts.Select(a => a.QuizId).Distinct().Count();
-        AverageQuizScore = attempts.Count > 0 ? attempts.Average(ToPercent) : null;
-        SessionsAttendedCount = attendances.Count;
+        var scoreByQuiz = await Stats.GetQuizScorePercentagesAsync(_studentId);
 
         var activityDates = attempts.Select(a => a.SubmittedAt.UtcDateTime.Date)
             .Concat(attendances.Select(a => a.CheckedInAt.UtcDateTime.Date))
@@ -304,7 +297,7 @@
         var quizActivity = attempts
             .OrderByDescending(a => a.SubmittedAt)
             .Take(3)
-            .Select(a => new ActivityItem($"Scored {(int)Math.Round(ToPercent(a))}% on a quiz", a.SubmittedAt.UtcDateTime));
+            .Select(a => new ActivityItem($"Scored {scoreByQuiz.GetValueOrDefault(a.QuizId):0}% on a quiz", a.SubmittedAt.UtcDateTime));
 
         var attendanceActivity = attendances
             .OrderByDescending(a => a.CheckedInAt)

@@ -50,7 +50,15 @@ else if (CurrentSession is not null)
             }
             else
             {
-                <button class="btn-primary full" @onclick="CheckIn" disabled="@IsCheckingIn">
+                @if (!CanCheckIn)
+                {
+                    <p class="text-small">Check-in opens 30 minutes before the session and closes 2 hours after it starts.</p>
+                }
+                @if (!string.IsNullOrEmpty(CheckInMessage))
+                {
+                    <p class="text-small" role="alert">@CheckInMessage</p>
+                }
+                <button class="btn-primary full" @onclick="CheckIn" disabled="@(IsCheckingIn || !CanCheckIn)">
                     @(IsCheckingIn ? "Checking in..." : "Check in")
                 </button>
                 @if (!string.IsNullOrEmpty(CurrentSession.MeetLink))
@@ -68,7 +76,9 @@ else if (CurrentSession is not null)
     private LiveSession? CurrentSession;
     private bool SessionNotFound;
     private bool AlreadyCheckedIn;
+    private bool CanCheckIn;
     private bool IsCheckingIn;
+    private string CheckInMessage = string.Empty;
     private string _studentId = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -85,6 +95,8 @@ else if (CurrentSession is not null)
             return;
         }
 
+        CanCheckIn = AttendanceService.IsCheckInOpen(CurrentSession, DateTimeOffset.UtcNow);
+
         if (!string.IsNullOrEmpty(_studentId))
         {
             AlreadyCheckedIn = await db.Attendances
@@ -97,10 +109,19 @@ else if (CurrentSession is not null)
         if (string.IsNullOrEmpty(_studentId) || IsCheckingIn) return;
 
         IsCheckingIn = true;
-        // CheckInAsync is idempotent per the handoff — safe even if this
-        // fires twice (e.g. a double-click before the button re-renders).
-        await AttendanceService.CheckInAsync(LiveSessionId, _studentId);
-        AlreadyCheckedIn = true;
-        IsCheckingIn = false;
+        try
+        {
+            await AttendanceService.CheckInAsync(LiveSessionId, _studentId);
+            AlreadyCheckedIn = true;
+            CheckInMessage = string.Empty;
+        }
+        catch (InvalidOperationException ex)
+        {
+            CheckInMessage = ex.Message;
+        }
+        finally
+        {
+            IsCheckingIn = false;
+        }
     }
 }

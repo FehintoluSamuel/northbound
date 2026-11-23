@@ -17,5 +17,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<TopicBankItem> TopicBankItems { get; set; } 
     public DbSet<BankQuestion> BankQuestions { get; set; } 
     public DbSet<BankOption> BankOptions { get; set; }
+    public DbSet<LandingPageContent> LandingPageContents { get; set; }
+    public DbSet<Instructor> Instructors { get; set; }
+    public DbSet<Testimonial> Testimonials { get; set; }
+    public DbSet<FaqItem> FaqItems { get; set; }
+    public DbSet<CurriculumModule> CurriculumModules { get; set; }
+    public DbSet<RealtimeProbe> RealtimeProbes { get; set; }
     
 }

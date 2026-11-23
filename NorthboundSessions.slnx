@@ -1,2 +1,6 @@
 <Solution>
+  <Project Path="src/NorthboundSessions.Data/NorthboundSessions.Data.csproj" />
+  <Project Path="src/NorthboundSessions.Web/NorthboundSessions.Web.csproj" />
+  <Project Path="src/NorthboundSessions.Jobs/NorthboundSessions.Jobs.csproj" />
+  <Project Path="tests/NorthboundSessions.Tests/NorthboundSessions.Tests.csproj" />
 </Solution>

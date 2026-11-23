@@ -1,0 +1,239 @@
+@page "/admin/landing"
+@rendermode InteractiveServer
+@layout AdminLayout
+@attribute [Authorize(Roles = "Instructor")]
+@inject LandingPageService Landing
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>Landing page | Northbound Sessions</PageTitle>
+
+<div class="page-title-row"><h1>Landing page</h1></div>
+<div class="page-sub">Edit the copy visitors see at the public home page. Changes take effect on the next page load.</div>
+
+@if (Saved)
+{
+    <div class="alert success">Landing page content saved.</div>
+}
+@if (ErrorMessage is not null)
+{
+    <div class="alert error" role="alert">@ErrorMessage</div>
+}
+
+<div class="form-card">
+    <h2>Hero and headings</h2>
+    <label class="field-label">Eyebrow</label>
+    <input class="text-input" @bind="Content.Hero.Eyebrow" />
+    <label class="field-label">Headline (before the accent)</label>
+    <input class="text-input" @bind="Content.Hero.Title" />
+    <label class="field-label">Accent phrase</label>
+    <input class="text-input" @bind="Content.Hero.Accent" />
+    <label class="field-label">Description</label>
+    <textarea class="text-area" rows="3" @bind="Content.Hero.Subheadline"></textarea>
+    <label class="field-label">Hero image path <span class="optional">(relative to wwwroot)</span></label>
+    <input class="text-input" @bind="Content.Hero.ImageUrl" />
+    <div class="field-row">
+        <div>
+            <label class="field-label">Curriculum heading</label>
+            <input class="text-input" @bind="Content.Hero.CurriculumHeading" />
+        </div>
+        <div>
+            <label class="field-label">Curriculum intro</label>
+            <input class="text-input" @bind="Content.Hero.CurriculumIntro" />
+        </div>
+    </div>
+    <label class="field-label">FAQ heading</label>
+    <input class="text-input" @bind="Content.Hero.FaqHeading" />
+    <div class="field-row">
+        <div>
+            <label class="field-label">Final call-to-action heading</label>
+            <input class="text-input" @bind="Content.Hero.FinalCtaHeading" />
+        </div>
+        <div>
+            <label class="field-label">Final call-to-action text</label>
+            <input class="text-input" @bind="Content.Hero.FinalCtaText" />
+        </div>
+    </div>
+</div>
+
+<div class="form-card">
+    <div class="section-head-row">
+        <h2>Instructor profiles</h2>
+        <span class="optional-tag">Add as many profiles as you need; all active profiles are shown on the landing page</span>
+    </div>
+    @for (var i = 0; i < Content.Instructors.Count; i++)
+    {
+        var instructor = Content.Instructors[i];
+        var index = i;
+        <div class="question-block">
+            <div class="question-block-head">
+                <span class="question-number">Instructor @(index + 1)</span>
+                <button type="button" class="remove-btn" @onclick="() => RemoveInstructor(instructor)">Remove</button>
+            </div>
+            <div class="field-row">
+                <div>
+                    <label class="field-label">Full name</label>
+                    <input class="text-input" @bind="instructor.FullName" />
+                </div>
+                <div>
+                    <label class="field-label">Headline</label>
+                    <input class="text-input" @bind="instructor.Headline" />
+                </div>
+            </div>
+            <label class="field-label">Bio <span class="optional">(separate paragraphs with a blank line)</span></label>
+            <textarea class="text-area" rows="5" @bind="instructor.Bio"></textarea>
+            <label class="field-label">Photo path</label>
+            <input class="text-input" @bind="instructor.PhotoUrl" />
+            <div class="field-row">
+                <div>
+                    <label class="field-label">Years teaching</label>
+                    <input class="text-input" @bind="instructor.YearsTeaching" />
+                </div>
+                <div>
+                    <label class="field-label">Market experience</label>
+                    <input class="text-input" @bind="instructor.YearsTrading" />
+                </div>
+            </div>
+            <div class="field-row">
+                <div>
+                    <label class="field-label">Market focus</label>
+                    <input class="text-input" @bind="instructor.MarketFocus" />
+                </div>
+                <div>
+                    <label class="field-label">Display order</label>
+                    <input class="text-input" type="number" @bind="instructor.DisplayOrder" />
+                </div>
+            </div>
+            <div class="field-row">
+                <div>
+                    <label class="field-label">Contact email <span class="optional">(optional)</span></label>
+                    <input class="text-input" @bind="instructor.ContactEmail" />
+                </div>
+                <div>
+                    <label class="field-label">LinkedIn URL <span class="optional">(optional)</span></label>
+                    <input class="text-input" @bind="instructor.LinkedInUrl" />
+                </div>
+            </div>
+            <label class="field-label">GitHub URL <span class="optional">(optional)</span></label>
+            <input class="text-input" @bind="instructor.GithubUrl" />
+        </div>
+    }
+    <button type="button" class="add-question-btn" @onclick="AddInstructor">+ Add instructor</button>
+</div>
+
+<div class="form-card">
+    <div class="section-head-row">
+        <h2>Curriculum modules</h2>
+        <span class="optional-tag">The section is hidden when empty</span>
+    </div>
+    @for (var i = 0; i < Content.Curriculum.Count; i++)
+    {
+        var module = Content.Curriculum[i];
+        <div class="question-block">
+            <div class="question-block-head">
+                <span class="question-number">Module @(i + 1)</span>
+                <button type="button" class="remove-btn" @onclick="() => Content.Curriculum.Remove(module)">Remove</button>
+            </div>
+            <label class="field-label">Title</label>
+            <input class="text-input" @bind="module.Title" />
+            <label class="field-label">Description</label>
+            <textarea class="text-area" rows="2" @bind="module.Description"></textarea>
+            <label class="field-label">Display order</label>
+            <input class="text-input" type="number" @bind="module.DisplayOrder" />
+        </div>
+    }
+    <button type="button" class="add-question-btn" @onclick="AddModule">+ Add module</button>
+</div>
+
+<div class="form-card">
+    <h2>Frequently asked questions</h2>
+    @for (var i = 0; i < Content.Faqs.Count; i++)
+    {
+        var faq = Content.Faqs[i];
+        <div class="question-block">
+            <div class="question-block-head">
+                <span class="question-number">Question @(i + 1)</span>
+                <button type="button" class="remove-btn" @onclick="() => Content.Faqs.Remove(faq)">Remove</button>
+            </div>
+            <label class="field-label">Question</label>
+            <input class="text-input" @bind="faq.Question" />
+            <label class="field-label">Answer</label>
+            <textarea class="text-area" rows="3" @bind="faq.Answer"></textarea>
+            <label class="field-label">Display order</label>
+            <input class="text-input" type="number" @bind="faq.DisplayOrder" />
+        </div>
+    }
+    <button type="button" class="add-question-btn" @onclick="AddFaq">+ Add question</button>
+</div>
+
+<div class="form-card">
+    <h2>Testimonials</h2>
+    @for (var i = 0; i < Content.Testimonials.Count; i++)
+    {
+        var testimonial = Content.Testimonials[i];
+        <div class="question-block">
+            <div class="question-block-head">
+                <span class="question-number">Testimonial @(i + 1)</span>
+                <button type="button" class="remove-btn" @onclick="() => Content.Testimonials.Remove(testimonial)">Remove</button>
+            </div>
+            <label class="field-label">Quote</label>
+            <textarea class="text-area" rows="3" @bind="testimonial.Quote"></textarea>
+            <label class="field-label">Attribution</label>
+            <input class="text-input" @bind="testimonial.Attribution" />
+            <label class="field-label">Display order</label>
+            <input class="text-input" type="number" @bind="testimonial.DisplayOrder" />
+        </div>
+    }
+    <button type="button" class="add-question-btn" @onclick="AddTestimonial">+ Add testimonial</button>
+</div>
+
+<div class="submit-row">
+    <button class="btn-primary" @onclick="Save" disabled="@IsSaving">@(IsSaving ? "Saving..." : "Save changes")</button>
+</div>
+
+@code {
+    private LandingContentDto Content = new();
+    private bool IsSaving;
+    private bool Saved;
+    private string? ErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Content = await Landing.GetAsync();
+    }
+
+    private void AddInstructor() => Content.Instructors.Add(new InstructorDto
+    {
+        FullName = "New instructor",
+        PhotoUrl = "images/instructor.jpg",
+        DisplayOrder = Content.Instructors.Count
+    });
+
+    private void RemoveInstructor(InstructorDto instructor) => Content.Instructors.Remove(instructor);
+
+    private void AddModule() => Content.Curriculum.Add(new CurriculumModuleDto { DisplayOrder = Content.Curriculum.Count });
+
+    private void AddFaq() => Content.Faqs.Add(new FaqItemDto { DisplayOrder = Content.Faqs.Count });
+
+    private void AddTestimonial() => Content.Testimonials.Add(new TestimonialDto { DisplayOrder = Content.Testimonials.Count });
+
+    private async Task Save()
+    {
+        IsSaving = true;
+        ErrorMessage = null;
+        Saved = false;
+        try
+        {
+            await Landing.SaveAsync(Content);
+            Content = await Landing.GetAsync();
+            Saved = true;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+}

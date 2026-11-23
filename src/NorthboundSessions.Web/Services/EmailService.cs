@@ -1,53 +1,46 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using NorthboundSessions.Data; 
-using NorthboundSessions.Web.Data; 
+using NorthboundSessions.Web.Data;
 
 namespace NorthboundSessions.Web.Services
 {
-    //Create an email service for email confirmation
     public class EmailService
     {
-        //Read the stored Gmail adress/app passowrd and talk to Gmail servers
         private readonly IConfiguration _configuration;
-        private readonly IDbContextFactory <ApplicationDbContext> _dbFactory; 
+        private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
 
-        public EmailService(IConfiguration configuration, IDbContextFactory<ApplicationDbContext> dbFactory) 
-        { 
-            _configuration = configuration; 
-            _dbFactory = dbFactory; 
-        }
-        /*public EmailService(IConfiguration configuration)
+        public EmailService(IConfiguration configuration, IDbContextFactory<ApplicationDbContext> dbFactory)
         {
             _configuration = configuration;
-        }*/
+            _dbFactory = dbFactory;
+        }
 
-        //Create a method that sends confirmation emails
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            var fromAddress = _configuration["Email:Address"]; //access the email address
-            var appPassword = _configuration["Email: AppPassword"]; //access the email password
-            var message = new MimeMessage(); //Create an instance
+            var fromAddress = _configuration["Email:Address"];
+            var appPassword = _configuration["Email:AppPassword"];
 
-            message.From.Add(MailboxAddress.Parse(fromAddress)); //add email to object
-            message.To.Add(MailboxAddress.Parse(toEmail)); //parse user email and add to pbject 
-            message.Subject = subject; //add subject
-            message.Body = new TextPart("plain") //add text
+            if (string.IsNullOrWhiteSpace(fromAddress) || string.IsNullOrWhiteSpace(appPassword))
             {
-                Text = body
-            };
-            using var client = new SmtpClient(); //instantiae smtp object
-            await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls); //establish connection
-            await client.AuthenticateAsync(fromAddress, appPassword); //fill in authentication 
-            await client.SendAsync(message); //send mail
-            await client.DisconnectAsync(true); //disconnect
+                throw new InvalidOperationException(
+                    "Email is not configured. Set Email:Address and Email:AppPassword (e.g. Email__Address and Email__AppPassword environment variables).");
+            }
+
+            var message = new MimeMessage();
+            message.From.Add(MailboxAddress.Parse(fromAddress));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = subject;
+            message.Body = new TextPart("plain") { Text = body };
+
+            using var client = new SmtpClient();
+            await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(fromAddress, appPassword);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
         }
 
         public async Task NotifyAllStudentsAsync(string subject, string body) 

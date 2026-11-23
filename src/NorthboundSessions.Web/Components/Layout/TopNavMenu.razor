@@ -11,6 +11,7 @@
 @inherits LayoutComponentBase
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IJSRuntime JS
+@inject StudentStatsService Stats
 
 <nav class="topnav" aria-label="Primary">
         <div class="topnav-inner">
@@ -83,8 +84,7 @@
     private string DisplayName { get; set; } = string.Empty;
     private string Initials { get; set; } = "?";
 
-    // Placeholder until this is wired to a real "overall completion" query.
-    private int CompletionPercent { get; set; } = 70;
+    private int CompletionPercent { get; set; }
     private double RingOffset => 100.5 - (100.5 * CompletionPercent / 100.0);
 
     protected override async Task OnInitializedAsync()
@@ -100,6 +100,12 @@
         Initials = localPart.Length >= 2
             ? localPart[..2].ToUpperInvariant()
             : localPart.ToUpperInvariant().PadRight(2, '?');
+
+        var studentId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(studentId))
+        {
+            CompletionPercent = (await Stats.GetStatsAsync(studentId)).CompletionPercent;
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

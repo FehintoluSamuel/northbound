@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using NorthboundSessions.Web.Data;
 using NorthboundSessions.Data;
-//using NorthboundSessions.ApplicationDbContext;
+using NorthboundSessions.Web.Data;
 
 namespace NorthboundSessions.Web.Services
 {
@@ -13,43 +8,47 @@ namespace NorthboundSessions.Web.Services
     {
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
 
-        // This is the constructor
         public QuizService(IDbContextFactory<ApplicationDbContext> dbFactory)
         {
             _dbFactory = dbFactory;
         }
 
-        
-
-        // This is a regular method 
         public async Task<Quiz?> GetQuizWithDetailsAsync(int quizId)
         {
             await using var context = await _dbFactory.CreateDbContextAsync();
-            // logic 
-            var quiz = await context.Quizzes
-            .Include(q=> q.Questions)
-            .ThenInclude(q=> q.Options)
-            .FirstOrDefaultAsync(q => q.Id == quizId);
-
-            return quiz;
+            return await context.Quizzes
+                .Include(q => q.Questions)
+                .ThenInclude(q => q.Options)
+                .FirstOrDefaultAsync(q => q.Id == quizId);
         }
 
         public async Task<QuizAttempt> SubmitQuizAsync(int quizId, string studentId, Dictionary<int, int> selectedOptions)
         {
-            // logic 
-            await using var context = await _dbFactory.CreateDbContextAsync();
-            var quiz = await GetQuizWithDetailsAsync(quizId);
-            int correctCount = 0; //setting up a counter that holds the running total as each question is checked
-            foreach (var quizQuestion in quiz.Questions)
+            if (string.IsNullOrWhiteSpace(studentId))
             {
-                var selectedOptionId = selectedOptions[quizQuestion.Id]; //pulls out which option the student picked for THIS specific question, using the question's Id as the dictionary key.
-                var correctOption = quizQuestion.Options.FirstOrDefault(o=> o.IsCorrect);//asks the database-loaded data (the source of truth) which option was actually correct
-                if (correctOption != null && correctOption.Id == selectedOptionId) 
-                { 
-                    correctCount++; 
-                }
-
+                throw new InvalidOperationException("A signed-in student is required to submit a quiz.");
             }
+
+            await using var context = await _dbFactory.CreateDbContextAsync();
+
+            var quiz = await context.Quizzes
+                .Include(q => q.Questions)
+                .ThenInclude(q => q.Options)
+                .FirstOrDefaultAsync(q => q.Id == quizId)
+                ?? throw new InvalidOperationException($"Quiz {quizId} does not exist.");
+
+            if (await context.QuizAttempts.AnyAsync(a => a.QuizId == quizId && a.StudentId == studentId))
+            {
+                throw new InvalidOperationException("This quiz has already been attempted.");
+            }
+
+            var correctCount = quiz.Questions.Count(question =>
+            {
+                var correct = question.Options.FirstOrDefault(o => o.IsCorrect);
+                return correct is not null
+                    && selectedOptions.TryGetValue(question.Id, out var selected)
+                    && selected == correct.Id;
+            });
 
             var attempt = new QuizAttempt
             {

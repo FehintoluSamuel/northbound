@@ -47,12 +47,36 @@
   nav{ border-bottom:1px solid var(--line); padding:16px 0; position:relative; z-index:10; background:var(--paper); }
   nav .wrap{ display:flex; align-items:center; justify-content:space-between; }
   .brand{ display:flex; align-items:center; gap:12px; }
-  .brand-mark{ width:32px; height:32px; }
+  .brand-mark{ width:32px; height:32px; color:var(--ink); }
+  .brand-mark .mark-dot{ fill:var(--emerald); }
   .brand-name{ font-family:'Source Serif 4', serif; font-size:18px; font-weight:600; color:var(--navy); }
-  .nav-links{ display:flex; gap:34px; font-size:14px; color:var(--slate); }
-  .nav-links a:hover{ color:var(--navy); }
-  .nav-right{ display:flex; align-items:center; gap:20px; }
-  .link-signin{ font-size:14px; font-weight:500; color:var(--navy); }
+  .nav-right{ position:relative; display:flex; align-items:center; gap:12px; }
+  .hamburger{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:38px; height:38px; padding:0;
+    background:var(--paper); border:1px solid var(--line); border-radius:9px;
+    color:var(--ink); cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .hamburger:hover{ background:var(--fog); border-color:var(--navy); }
+  .hamburger:focus-visible{ outline:2px solid var(--navy); outline-offset:2px; }
+  .hamburger-lines{ display:grid; gap:4px; }
+  .hamburger-lines span{ display:block; width:18px; height:2px; background:currentColor; border-radius:2px; transition:transform .18s ease, opacity .18s ease; }
+  .hamburger[aria-expanded="true"] .hamburger-lines span:nth-child(1){ transform:translateY(6px) rotate(45deg); }
+  .hamburger[aria-expanded="true"] .hamburger-lines span:nth-child(2){ opacity:0; }
+  .hamburger[aria-expanded="true"] .hamburger-lines span:nth-child(3){ transform:translateY(-6px) rotate(-45deg); }
+  .nav-menu{
+    position:absolute; top:calc(100% + 10px); right:0;
+    width:min(280px, calc(100vw - 32px));
+    padding:10px; background:var(--paper);
+    border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 18px 40px -12px rgba(31,42,68,.25);
+  }
+  .nav-menu[hidden]{ display:none; }
+  .nav-menu-link{ display:block; padding:10px 12px; border-radius:7px; font-size:14px; color:var(--ink); }
+  .nav-menu-link:hover{ background:var(--fog); color:var(--navy); }
+  .nav-menu-divider{ height:1px; background:var(--line); margin:8px 4px; }
+  .nav-menu .btn-primary{ display:block; text-align:center; margin-top:4px; }
   /* Theme toggle — one icon visible at a time depending on current theme. */
   .theme-toggle{
     display:inline-flex; align-items:center; justify-content:center;
@@ -188,7 +212,6 @@
     .features, .curriculum-grid, .testimonials, .steps{ grid-template-columns:1fr; }
     .stats .wrap{ grid-template-columns:1fr; }
     .stats .stat + .stat{ border-left:none; border-top:1px solid var(--line); padding-top:20px; margin-top:20px; }
-    .nav-links{ display:none; }
     .hero .wrap{ gap:40px; }
     .hero h1{ font-size:clamp(34px, 7vw, 42px); }
     .hero-visual{ max-width:620px; width:100%; margin:0 auto; }
@@ -203,7 +226,6 @@
     .brand-mark{ width:28px; height:28px; flex-shrink:0; }
     .brand-name{ font-size:16px; line-height:1.2; }
     .nav-right{ gap:10px; flex-shrink:0; }
-    .link-signin{ font-size:13px; }
     .btn-primary{ padding:9px 16px; font-size:13px; }
     .hero .wrap{ gap:32px; }
     .hero h1{ font-size:clamp(30px, 9vw, 36px); margin-top:10px; }
@@ -227,18 +249,12 @@
 <nav>
   <div class="wrap">
     <div class="brand">
-      <svg class="brand-mark" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="110" cy="110" r="98" fill="none" stroke="#1F2A44" stroke-width="6"/>
-        <path d="M110 40 L134 148 L110 122 L86 148 Z" fill="#1F2A44"/>
-        <circle cx="110" cy="24" r="9" fill="#16A34A"/>
+      <svg class="brand-mark" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="110" cy="110" r="98" fill="none" stroke="currentColor" stroke-width="6"/>
+        <path d="M110 40 L134 148 L110 122 L86 148 Z" fill="currentColor"/>
+        <circle class="mark-dot" cx="110" cy="24" r="9"/>
       </svg>
       <span class="brand-name">Northbound Sessions</span>
-    </div>
-    <div class="nav-links">
-      <a href="#how">How it works</a>
-      <a href="#curriculum">Curriculum</a>
-      <a href="#about">Instructor</a>
-      <a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
       <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
@@ -250,8 +266,19 @@
           <path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.8 6.8 0 0 0 9.7 9.7Z" />
         </svg>
       </button>
-      <a href="/Account/Login" class="link-signin">Sign in</a>
-      <a href="/Account/Register" class="btn-primary">Apply</a>
+      <button type="button" class="hamburger" id="navToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="navMenu">
+        <span class="hamburger-lines" aria-hidden="true"><span></span><span></span><span></span></span>
+      </button>
+      <div class="nav-menu" id="navMenu" hidden>
+        <a class="nav-menu-link" href="#how">How it works</a>
+        <a class="nav-menu-link" href="#curriculum">Curriculum</a>
+        <a class="nav-menu-link" href="#about">Instructor</a>
+        <a class="nav-menu-link" href="#schedule">Schedule</a>
+        <a class="nav-menu-link" href="#faq">FAQ</a>
+        <div class="nav-menu-divider"></div>
+        <a class="nav-menu-link" href="/Account/Login">Sign in</a>
+        <a href="/Account/Register" class="btn-primary">Apply</a>
+      </div>
     </div>
   </div>
 </nav>
@@ -259,9 +286,9 @@
 <section class="hero">
   <div class="wrap">
     <div>
-      <span class="eyebrow">Stock-market education for beginners</span>
-      <h1>Build the judgment to navigate the stock market with <span class="accent">clarity.</span></h1>
-      <p class="lede">Northbound Sessions is a structured learning experience for people who want to understand stocks, analyze opportunities, manage risk, and make independent decisions without relying on blind signals or get-rich-quick promises.</p>
+      <span class="eyebrow" id="hero-eyebrow">Stock-market education for beginners</span>
+      <h1><span id="hero-title">Build the judgment to navigate the stock market with </span><span class="accent" id="hero-accent">clarity.</span></h1>
+      <p class="lede" id="hero-subheadline">Northbound Sessions is a structured learning experience for people who want to understand stocks, analyze opportunities, manage risk, and make independent decisions without relying on blind signals or get-rich-quick promises.</p>
       <div class="hero-actions">
         <a href="/Account/Register" class="btn-primary">Apply</a>
         <a href="#how" class="btn-secondary-link">See how it works</a>
@@ -269,7 +296,7 @@
     </div>
     <div class="hero-visual">
       <div class="hero-image-slot">
-        <img src="images/hero.jpg" alt="Fehintolu Samuel teaching a stock-market lesson">
+        <img id="hero-image" src="images/hero.jpg" alt="Fehintolu Samuel teaching a stock-market lesson">
       </div>
       <div class="float-card float-1">
         <div class="float-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg></div>
@@ -323,6 +350,7 @@
   </div>
 </section>
 
+<div id="instructors">
 <section class="about" id="about">
   <div class="wrap">
     <div class="about-photo">
@@ -342,14 +370,15 @@
     </div>
   </div>
 </section>
+</div>
 
 <section class="section" id="curriculum">
   <div class="section-head">
     <span class="eyebrow">Curriculum</span>
-    <h2>Four modules, built to compound on each other</h2>
-    <p>Each module builds on the last, so you can connect market concepts instead of studying them in isolation.</p>
+    <h2 id="curriculum-heading">Four modules, built to compound on each other</h2>
+    <p id="curriculum-intro">Each module builds on the last, so you can connect market concepts instead of studying them in isolation.</p>
   </div>
-  <div class="curriculum-grid">
+  <div class="curriculum-grid" id="curriculum-grid">
     <div class="module"><span class="module-num">01</span><div><h3>Foundations</h3><p>Market structure, order types, and the vocabulary everything else depends on.</p></div></div>
     <div class="module"><span class="module-num">02</span><div><h3>Technical analysis</h3><p>Reading charts, identifying trends, and recognizing patterns with actual context.</p></div></div>
     <div class="module"><span class="module-num">03</span><div><h3>Risk management</h3><p>Position sizing, stop-losses, and the discipline that separates a plan from a guess.</p></div></div>
@@ -376,12 +405,22 @@
   </div>
 </section>
 
+<section class="section" id="testimonials" hidden>
+  <div class="section-head">
+    <span class="eyebrow">What students say</span>
+    <h2>Testimonials</h2>
+  </div>
+  <div class="wrap">
+    <div class="testimonials" id="testimonials-list"></div>
+  </div>
+</section>
+
 <section class="section" id="faq" style="padding-top:0;">
   <div class="section-head">
     <span class="eyebrow">Questions</span>
-    <h2>Before you enroll</h2>
+    <h2 id="faq-heading">Before you enroll</h2>
   </div>
-  <div class="faq-wrap">
+  <div class="faq-wrap" id="faq-list">
     <div class="faq-item"><h3>Do I need prior trading experience?</h3><p>No. The curriculum begins with market fundamentals and develops from there. No stock-market background is assumed.</p></div>
     <div class="faq-item"><h3>When are the live sessions?</h3><p>Live sessions take place on Thursday, Saturday, and Sunday. Each session lasts two hours.</p></div>
     <div class="faq-item"><h3>How much time should I set aside?</h3><p>Plan for about two hours of study on each weekday, in addition to the live sessions.</p></div>
@@ -392,8 +431,8 @@
 
 <section class="final-cta">
   <div class="wrap">
-    <h2>Ready to start?</h2>
-    <p>Applications are reviewed on a rolling basis for the current cohort.</p>
+    <h2 id="final-cta-heading">Ready to start?</h2>
+    <p id="final-cta-text">Applications are reviewed on a rolling basis for the current cohort.</p>
     <a href="/Account/Register" class="btn-primary">Apply</a>
   </div>
 </section>
@@ -454,6 +493,194 @@
           try { localStorage.setItem('theme', next); } catch (e) { /* private mode */ }
           sync();
       });
+  })();
+</script>
+
+<script>
+  (function () {
+    var button = document.getElementById('navToggle');
+    var menu = document.getElementById('navMenu');
+    if (!button || !menu) return;
+
+    function close() {
+      menu.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+      button.setAttribute('aria-label', 'Open navigation menu');
+    }
+
+    button.addEventListener('click', function () {
+      var isOpen = button.getAttribute('aria-expanded') === 'true';
+      if (isOpen) {
+        close();
+        return;
+      }
+      menu.hidden = false;
+      button.setAttribute('aria-expanded', 'true');
+      button.setAttribute('aria-label', 'Close navigation menu');
+    });
+
+    menu.addEventListener('click', function (event) {
+      if (event.target.closest('a')) close();
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!menu.contains(event.target) && !button.contains(event.target)) close();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') close();
+    });
+  })();
+</script>
+
+<script>
+  (function () {
+    function node(tag, className, text) {
+      var n = document.createElement(tag);
+      if (className) n.className = className;
+      if (text !== undefined && text !== null) n.textContent = text;
+      return n;
+    }
+
+    function setText(id, value) {
+      var target = document.getElementById(id);
+      if (target && value !== undefined && value !== null && value !== '') target.textContent = value;
+    }
+
+    function safeHref(value) {
+      if (!value) return '';
+      var href = value.trim();
+      return /^(https?:|mailto:)/i.test(href) || href.charAt(0) === '/' || href.charAt(0) === '#' ? href : '#';
+    }
+
+    function anchor(href, text) {
+      var a = node('a', 'btn-secondary-link', text);
+      a.href = safeHref(href);
+      if (href.indexOf('http') === 0) {
+        a.target = '_blank';
+        a.rel = 'noreferrer';
+      }
+      return a;
+    }
+
+    function renderInstructors(items) {
+      var host = document.getElementById('instructors');
+      if (!host || !Array.isArray(items) || !items.length) return;
+      host.textContent = '';
+      items.forEach(function (item, index) {
+        var section = node('section', 'about');
+        if (index === 0) section.id = 'about';
+        var wrap = node('div', 'wrap');
+
+        var photo = node('div', 'about-photo');
+        var img = node('img');
+        img.src = item.PhotoUrl || 'images/instructor.jpg';
+        img.alt = (item.FullName || 'Instructor') + ', instructor';
+        photo.appendChild(img);
+
+        var copy = node('div', 'about-copy');
+        copy.appendChild(node('span', 'eyebrow', 'Your instructor'));
+        copy.appendChild(node('h2', null, 'Learn with ' + (item.FullName || 'our instructor')));
+        if (item.Headline) copy.appendChild(node('p', null, item.Headline));
+        (item.Bio || '').split(/\n\s*\n/).forEach(function (paragraph) {
+          if (paragraph.trim()) copy.appendChild(node('p', null, paragraph.trim()));
+        });
+
+        var credentials = node('div', 'about-credentials');
+        [
+          [item.YearsTeaching, 'Years teaching'],
+          [item.YearsTrading, 'Market experience'],
+          [item.MarketFocus, 'Primary market']
+        ].forEach(function (pair) {
+          if (!pair[0]) return;
+          var entry = node('div');
+          entry.appendChild(node('div', 'cred-num', pair[0]));
+          entry.appendChild(node('div', 'cred-label', pair[1]));
+          credentials.appendChild(entry);
+        });
+        if (credentials.children.length) copy.appendChild(credentials);
+
+        var links = node('div', 'hero-actions');
+        if (item.ContactEmail) links.appendChild(anchor('mailto:' + item.ContactEmail, 'Email instructor'));
+        if (item.LinkedInUrl) links.appendChild(anchor(item.LinkedInUrl, 'LinkedIn'));
+        if (item.GithubUrl) links.appendChild(anchor(item.GithubUrl, 'GitHub'));
+        if (links.children.length) copy.appendChild(links);
+
+        wrap.appendChild(photo);
+        wrap.appendChild(copy);
+        section.appendChild(wrap);
+        host.appendChild(section);
+      });
+    }
+
+    function renderCurriculum(items) {
+      var grid = document.getElementById('curriculum-grid');
+      if (!grid || !Array.isArray(items) || !items.length) return;
+      grid.textContent = '';
+      items.forEach(function (item, index) {
+        var module = node('div', 'module');
+        module.appendChild(node('span', 'module-num', String(index + 1).padStart(2, '0')));
+        var body = node('div');
+        body.appendChild(node('h3', null, item.Title));
+        body.appendChild(node('p', null, item.Description));
+        module.appendChild(body);
+        grid.appendChild(module);
+      });
+    }
+
+    function renderFaqs(items) {
+      var host = document.getElementById('faq-list');
+      if (!host || !Array.isArray(items) || !items.length) return;
+      host.textContent = '';
+      items.forEach(function (item) {
+        var entry = node('div', 'faq-item');
+        entry.appendChild(node('h3', null, item.Question));
+        entry.appendChild(node('p', null, item.Answer));
+        host.appendChild(entry);
+      });
+    }
+
+    function renderTestimonials(items) {
+      var section = document.getElementById('testimonials');
+      var host = document.getElementById('testimonials-list');
+      if (!section || !host || !Array.isArray(items) || !items.length) return;
+      host.textContent = '';
+      items.forEach(function (item) {
+        var entry = node('div', 'testimonial');
+        entry.appendChild(node('blockquote', null, '“' + item.Quote + '”'));
+        entry.appendChild(node('cite', null, item.Attribution));
+        host.appendChild(entry);
+      });
+      section.hidden = false;
+    }
+
+    fetch('/api/landing', { headers: { 'Accept': 'application/json' } })
+      .then(function (response) {
+        if (!response.ok) throw new Error('Landing content unavailable');
+        return response.json();
+      })
+      .then(function (data) {
+        if (!data) return;
+        var hero = data.Hero || {};
+        setText('hero-eyebrow', hero.Eyebrow);
+        setText('hero-title', hero.Title ? hero.Title + ' ' : '');
+        setText('hero-accent', hero.Accent);
+        setText('hero-subheadline', hero.Subheadline);
+        if (hero.ImageUrl) {
+          var image = document.getElementById('hero-image');
+          if (image) image.src = hero.ImageUrl;
+        }
+        setText('curriculum-heading', hero.CurriculumHeading);
+        setText('curriculum-intro', hero.CurriculumIntro);
+        setText('faq-heading', hero.FaqHeading);
+        setText('final-cta-heading', hero.FinalCtaHeading);
+        setText('final-cta-text', hero.FinalCtaText);
+        renderInstructors(data.Instructors);
+        renderCurriculum(data.Curriculum);
+        renderFaqs(data.Faqs);
+        renderTestimonials(data.Testimonials);
+      })
+      .catch(function () {});
   })();
 </script>
 

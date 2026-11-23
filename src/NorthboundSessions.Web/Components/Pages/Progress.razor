@@ -10,6 +10,7 @@
 @inject NavigationManager Nav
 @using NorthboundSessions.Web.Data
 @inject AchievementService Achievements
+@inject StudentStatsService Stats
 @attribute [Authorize]
 
 <PageTitle>Your progress · Northbound</PageTitle>
@@ -133,34 +134,12 @@
             .OrderByDescending(a => a.CheckedInAt)
             .ToListAsync();
 
-        var quizIds = attempts.Select(a => a.QuizId).Distinct().ToList();
-        var questionCounts = await db.QuizQuestions
-            .Where(q => quizIds.Contains(q.QuizId))
-            .GroupBy(q => q.QuizId)
-            .Select(g => new { QuizId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.QuizId, x => x.Count);
+        var stats = await Stats.GetStatsAsync(_studentId);
+        LessonsCompletedCount = stats.CompletedLessons;
+        AverageQuizScore = stats.AverageQuizScore;
+        SessionsAttendedCount = stats.SessionsAttended;
 
-        double ToPercent(QuizAttempt a) =>
-            questionCounts.TryGetValue(a.QuizId, out var total) && total > 0
-                ? a.Score * 100.0 / total : 0;
-
-        // "Lessons completed" means distinct lessons touched, so count via
-        // each quiz's lesson. Averaging raw Score (a point count) instead of
-        // ToPercent() made this show e.g. "7%" instead of "78%".
-        var lessonIdsByQuiz = await db.Quizzes
-            .Where(q => quizIds.Contains(q.Id))
-            .Select(q => new { q.Id, q.LessonId })
-            .ToDictionaryAsync(x => x.Id, x => x.LessonId);
-
-        LessonsCompletedCount = attempts
-            .Select(a => lessonIdsByQuiz.TryGetValue(a.QuizId, out var lessonId) ? lessonId : (int?)null)
-            .Where(id => id is not null)
-            .Distinct()
-            .Count();
-
-        var percents = attempts.Select(ToPercent).ToList();
-        AverageQuizScore = percents.Count > 0 ? percents.Average() : null;
-        SessionsAttendedCount = attendances.Count;
+        var scoreByQuiz = await Stats.GetQuizScorePercentagesAsync(_studentId);
 
         var activityDates = attempts.Select(a => a.SubmittedAt.Date)
             .Concat(attendances.Select(a => a.CheckedInAt.Date))
@@ -171,7 +150,7 @@
         CurrentStreak = AchievementService.ComputeStreaks(activityDates).current;
 
         QuizHistory = attempts
-            .Select(a => new QuizHistoryItem(a.Quiz?.Title ?? "Quiz", (int)Math.Round(ToPercent(a)), a.SubmittedAt.DateTime))
+            .Select(a => new QuizHistoryItem(a.Quiz?.Title ?? "Quiz", (int)Math.Round(scoreByQuiz.GetValueOrDefault(a.QuizId)), a.SubmittedAt.DateTime))
             .ToList();
 
         AttendanceHistory = attendances

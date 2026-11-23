@@ -7,6 +7,7 @@
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @inject QuizService QuizService
+@inject StudentStatsService Stats
 @inject NavigationManager Nav
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Web.Data
@@ -133,6 +134,10 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
             {
                 <p class="hint-text">Answer all questions to submit</p>
             }
+            @if (!string.IsNullOrEmpty(SubmitError))
+            {
+                <p class="hint-text" role="alert">@SubmitError</p>
+            }
         }
         else if (Stage == QuizStage.Results)
         {
@@ -198,6 +203,7 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
     private DateTime? PastAttemptDate;
     private int FinalScore;
     private int CorrectCount;
+    private string SubmitError = string.Empty;
     private string _studentId = string.Empty;
 
     private int AnsweredCount => SelectedOptions.Count;
@@ -222,7 +228,8 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
             if (existing is not null)
             {
                 AlreadyAttempted = true;
-                PastAttemptScore = existing.Score;
+                PastAttemptScore = (int)Math.Round(
+                    (await Stats.GetQuizScorePercentagesAsync(_studentId)).GetValueOrDefault(QuizId));
                 PastAttemptDate = existing.SubmittedAt.DateTime;
                 CurrentQuiz = await db.Quizzes.FindAsync(QuizId); // needed for BackToLesson's LessonId
                 return;
@@ -296,23 +303,18 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
     {
         if (!AllAnswered || string.IsNullOrEmpty(_studentId)) return;
 
-        // Grading happens server-side against real IsCorrect data —
-        // never trust a client-computed score, per the handoff.
-        await QuizService.SubmitQuizAsync(QuizId, _studentId, SelectedOptions);
-
-        // Compute the results-screen breakdown from the same option data
-        // already loaded client-side (safe now that the quiz is submitted
-        // and grading has happened) rather than assuming a specific
-        // return shape from SubmitQuizAsync — confirm its actual return
-        // type and simplify this if it already includes a score/breakdown.
-        CorrectCount = Questions.Count(q =>
+        try
         {
-            var correctOpt = q.Options.FirstOrDefault(o => o.IsCorrect);
-            return correctOpt is not null && SelectedOptions.GetValueOrDefault(q.Id) == correctOpt.Id;
-        });
-        FinalScore = (int)Math.Round(CorrectCount * 100.0 / Questions.Count);
-
-        Stage = QuizStage.Results;
+            var attempt = await QuizService.SubmitQuizAsync(QuizId, _studentId, SelectedOptions);
+            CorrectCount = attempt.Score;
+            FinalScore = (int)Math.Round(CorrectCount * 100.0 / Math.Max(1, Questions.Count));
+            SubmitError = string.Empty;
+            Stage = QuizStage.Results;
+        }
+        catch (InvalidOperationException ex)
+        {
+            SubmitError = ex.Message;
+        }
     }
 
     private void BackToLesson()

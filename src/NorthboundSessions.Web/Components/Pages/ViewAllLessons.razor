@@ -7,6 +7,8 @@
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @using NorthboundSessions.Web.Data
+@using NorthboundSessions.Web.Services
+@inject StudentStatsService Stats
 @attribute [Authorize]
 
 
@@ -81,32 +83,15 @@
             .OrderByDescending(l => l.ReleaseDate)
             .ToListAsync();
 
-        // Quiz per lesson, and which quizzes this student has already attempted.
-        var lessonQuizIds = await db.Quizzes
-
-            .Where(q => releasedLessons.Select(l => l.Id).Contains(q.LessonId))
-
-            .GroupBy(q => q.LessonId)
-
-            .Select(g => g.OrderBy(q => q.Id).First())
-
-            .ToDictionaryAsync(q => q.LessonId, q => q.Id);
-
-
-        var attemptedQuizIds = string.IsNullOrEmpty(studentId)
+        var completedLessonIds = string.IsNullOrEmpty(studentId)
             ? new HashSet<int>()
-            : (await db.QuizAttempts
-                .Where(a => a.StudentId == studentId)
-                .Select(a => a.QuizId)
-                .ToListAsync()).ToHashSet();
+            : await Stats.GetCompletedLessonIdsAsync(studentId);
 
         foreach (var lesson in releasedLessons)
         {
             var row = new LessonRow(lesson.Id, lesson.Title, lesson.ReleaseDate, lesson.IsLiveDay);
-            var hasQuiz = lessonQuizIds.TryGetValue(lesson.Id, out var quizId);
-            var completed = hasQuiz && attemptedQuizIds.Contains(quizId);
 
-            if (completed) Completed.Add(row);
+            if (completedLessonIds.Contains(lesson.Id)) Completed.Add(row);
             else Available.Add(row);
         }
     }

@@ -2,11 +2,14 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NorthboundSessions.Web.Services;
+using NorthboundSessions.Data;
 using NorthboundSessions.Web.Components;
 using NorthboundSessions.Web.Components.Account;
 using NorthboundSessions.Web.Data;
 using Microsoft.AspNetCore.HttpOverrides;
 
+
+NeonEnvironment.LoadDotEnv();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +21,7 @@ var forwardedHeaderOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 };
-forwardedHeaderOptions.KnownNetworks.Clear();
+forwardedHeaderOptions.KnownIPNetworks.Clear();
 forwardedHeaderOptions.KnownProxies.Clear();
 
 
@@ -39,19 +42,14 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
+var neonDatabaseUrl = NeonEnvironment.GetNpgsql("DATABASE_URL");
+if (!string.IsNullOrWhiteSpace(neonDatabaseUrl))
+{
+    builder.Configuration["ConnectionStrings:DefaultConnection"] = neonDatabaseUrl;
+}
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-Console.WriteLine("=== DATABASE CONFIG ===");
-
-Console.WriteLine($"Connection string found: {!string.IsNullOrEmpty(connectionString)}");
-
-Console.WriteLine($"Connection string length: {connectionString.Length}");
-
-Console.WriteLine($"Connection string starts with: {connectionString.Substring(0, Math.Min(40, connectionString.Length))}");
-
-Console.WriteLine("======================");
-
-/*builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())); */
+var migrationConnectionString = NeonEnvironment.GetNpgsql("DATABASE_URL_UNPOOLED", pooled: false) ?? connectionString;
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
@@ -62,6 +60,8 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<ReportingService>();
 builder.Services.AddScoped<LessonProgressService>();
 builder.Services.AddScoped<AchievementService>();
+builder.Services.AddScoped<StudentStatsService>();
+builder.Services.AddScoped<LandingPageService>();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
@@ -78,17 +78,11 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
-
 {
-
-    var dbContextFactory = scope.ServiceProvider
-
-        .GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-
+    var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
     using var dbContext = dbContextFactory.CreateDbContext();
-
+    dbContext.Database.SetConnectionString(migrationConnectionString);
     dbContext.Database.Migrate();
-
 }
 
 // Configure the HTTP request pipeline.
@@ -129,6 +123,71 @@ app.MapGet("/", async context =>
         Path.Combine(app.Environment.WebRootPath, "index.html"));
 
 });
+app.MapGet("/api/landing", async (LandingPageService landing) => Results.Ok(await landing.GetAsync()));
+
+app.MapGet("/api/health/neon", async (
+    IDbContextFactory<ApplicationDbContext> dbFactory,
+    IConfiguration configuration) =>
+{
+    var realtimeStatus = string.IsNullOrWhiteSpace(NeonEnvironment.Get("NEON_REALTIME_URL"))
+        || string.IsNullOrWhiteSpace(NeonEnvironment.Get("NEON_REALTIME_SECRET"))
+            ? "missing"
+            : "configured";
+    var branch = configuration["NEON_BRANCH"];
+
+    await using var context = await dbFactory.CreateDbContextAsync();
+    if (!await context.Database.CanConnectAsync())
+    {
+        return Results.Json(new { branch, postgres = "unavailable", realtime = realtimeStatus },
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    return Results.Ok(new { branch, postgres = "ok", realtime = realtimeStatus });
+});
+
+app.MapGet("/api/realtime/probe", async (
+    IDbContextFactory<ApplicationDbContext> dbFactory,
+    CancellationToken cancellationToken) =>
+{
+    await using var context = await dbFactory.CreateDbContextAsync(cancellationToken);
+    var rows = await context.RealtimeProbes
+        .OrderByDescending(item => item.Id)
+        .Take(5)
+        .Select(item => new { item.Id, item.Message, item.UpdatedAtUtc })
+        .ToListAsync(cancellationToken);
+
+    return Results.Ok(rows);
+});
+
+app.MapPost("/api/realtime/probe", async (
+    HttpContext httpContext,
+    IDbContextFactory<ApplicationDbContext> dbFactory,
+    CancellationToken cancellationToken) =>
+{
+    var remoteIp = httpContext.Connection.RemoteIpAddress;
+    if (remoteIp is not null && !System.Net.IPAddress.IsLoopback(remoteIp))
+    {
+        return Results.Forbid();
+    }
+
+    await using var context = await dbFactory.CreateDbContextAsync(cancellationToken);
+    var probe = await context.RealtimeProbes
+        .OrderByDescending(item => item.Id)
+        .FirstOrDefaultAsync(cancellationToken);
+
+    if (probe is null)
+    {
+        probe = new RealtimeProbe();
+        context.RealtimeProbes.Add(probe);
+    }
+
+    probe.Message = $"probe-{Guid.NewGuid():N}";
+    probe.UpdatedAtUtc = DateTime.UtcNow;
+    await context.SaveChangesAsync(cancellationToken);
+
+    return Results.Ok(new { probe.Id, probe.Message });
+});
+
 app.MapGet("/api/lessons/{id}/image", 
 async (
     int id, IDbContextFactory<ApplicationDbContext> dbFactory
@@ -198,7 +257,7 @@ using (var scope = app.Services.CreateScope())
     else
     {
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        foreach (var email in configured.Select(e => e?.Trim()).Where(e => !string.IsNullOrWhiteSpace(e)))
+        foreach (var email in configured.Select(e => e?.Trim()).OfType<string>().Where(e => !string.IsNullOrWhiteSpace(e)))
         {
             var user = await userManager.FindByEmailAsync(email);
             if (user is null)

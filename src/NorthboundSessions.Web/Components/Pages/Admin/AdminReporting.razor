@@ -4,11 +4,7 @@
 @attribute [Authorize(Roles = "Instructor")]
 @inject ReportingService ReportingService
 @using Microsoft.AspNetCore.Authorization
-@using NorthboundSessions.Data
-@using Microsoft.EntityFrameworkCore
-@using NorthboundSessions.Web.Data
 @using NorthboundSessions.Web.Services
-@inject IDbContextFactory<ApplicationDbContext> DbFactory
 
 
 <div class="page-title-row"><h1>Student progress</h1></div>
@@ -65,9 +61,6 @@ else
 }
 
 @code {
-    // Property names on StudentProgressSummary are assumed
-    // (Email, QuizzesAttempted, AverageScore, SessionsAttended) —
-    // confirm these against the actual class and adjust if they differ.
     private List<StudentProgressSummary> Summaries = new();
     private string SearchTerm = string.Empty;
 

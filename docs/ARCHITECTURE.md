@@ -15,8 +15,8 @@ on a $0 infrastructure budget.
 | Data access | Entity Framework Core | Standard, well-documented |
 | Database | **PostgreSQL** (see note) | App uses the Npgsql EF Core provider and the checked-in migrations are Postgres migrations |
 | Auth | ASP.NET Core Identity | Built-in roles (Student / Instructor) |
-| Slide generation | Open XML SDK | Generates real .pptx files, no Office install needed |
-| Handout generation | QuestPDF (Community license) | Clean PDF generation in C# |
+| Lesson slides | Built-in slide viewer | `SlideService` splits `Lesson.OutlineContent` into on-screen slides; no `.pptx` file is produced today |
+| Handouts | Not implemented | `Lesson.HandoutFilePath` exists in the model, but nothing generates or stores a PDF yet |
 | Hosting | Azure Container Apps | Free monthly compute grant, native Docker support |
 
 > **Unresolved: database target.** The design decisions below record an
@@ -57,6 +57,10 @@ Lesson, topic, and live-session content is created through the `/admin`
 panel and stored in database tables, so adding content is a data change
 rather than a code change. See the data model in NorthboundSessions.Data for
 the current table list.
+
+The generated-lesson requirement currently covers the database lesson, its quiz,
+and the in-app slide view only. Producing downloadable `.pptx` slides and a PDF
+handout (originally planned with Open XML SDK and QuestPDF) is still outstanding.
 
 The marketing landing page is **not** managed this way: it is the static
 `wwwroot/index.html` served at `/` by `Program.cs`, and its copy, FAQ,

@@ -40,6 +40,7 @@
     // there's a reason for something more structured.
     private string BreadcrumbLabel => Nav.Uri.Contains("/admin/lessons/create") ? "Admin / New lesson"
         : Nav.Uri.Contains("/admin/topics/create") ? "Admin / New topic"
-        : Nav.Uri.Contains("/admin/sessions/create") ? "Admin / New live session"
+        : Nav.Uri.Contains("/admin/landing") ? "Admin / Landing page"
+        : Nav.Uri.Contains("/all-sessions") ? "Admin / Live sessions"
         : "Admin / Student progress";
 }

@@ -2,11 +2,9 @@
 @rendermode InteractiveServer
 @layout AppLayout
 @using Microsoft.AspNetCore.Authorization
-@inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
-@using Microsoft.EntityFrameworkCore
-@using NorthboundSessions.Data
 @using NorthboundSessions.Web.Services
+@inject StudentStatsService Stats
 @inject NavigationManager Nav
 @using NorthboundSessions.Web.Data
 @attribute [Authorize]
@@ -70,24 +68,9 @@
 
         if (string.IsNullOrEmpty(studentId)) return;
 
-        await using var db = await DbFactory.CreateDbContextAsync();
-
-        var attempts = await db.QuizAttempts.Where(a => a.StudentId == studentId).ToListAsync();
-        SessionsAttendedCount = await db.Attendances.CountAsync(a => a.StudentId == studentId);
-        LessonsCompletedCount = attempts.Select(a => a.QuizId).Distinct().Count();
-
-        if (attempts.Count > 0)
-        {
-            var quizIds = attempts.Select(a => a.QuizId).Distinct().ToList();
-            var questionCounts = await db.QuizQuestions
-                .Where(q => quizIds.Contains(q.QuizId))
-                .GroupBy(q => q.QuizId)
-                .Select(g => new { QuizId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.QuizId, x => x.Count);
-
-            AverageQuizScore = attempts.Average(a =>
-                questionCounts.TryGetValue(a.QuizId, out var total) && total > 0
-                    ? a.Score * 100.0 / total : 0);
-        }
+        var stats = await Stats.GetStatsAsync(studentId);
+        LessonsCompletedCount = stats.CompletedLessons;
+        AverageQuizScore = stats.AverageQuizScore;
+        SessionsAttendedCount = stats.SessionsAttended;
     }
 }
