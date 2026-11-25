@@ -177,6 +177,7 @@ public class AchievementService(IDbContextFactory<ApplicationDbContext> dbFactor
             .ToDictionaryAsync(x => x.Id, x => x.LessonId, ct);
 
         var attemptedLessonIds = attempts
+            .Where(a => a.Passed)
             .Select(a => lessonIdsByQuiz.TryGetValue(a.QuizId, out var lid) ? lid : (int?)null)
             .Where(l => l.HasValue)
             .Select(l => l!.Value)

@@ -59,7 +59,7 @@
                 @foreach (var attempt in QuizHistory)
                 {
                     <div class="history-item">
-                        <div class="score-chip @(attempt.Score >= 70 ? "pass" : "fail")">@attempt.Score%</div>
+                        <div class="score-chip @(attempt.Passed ? "pass" : "fail")">@attempt.Score%</div>
                         <div class="history-body">
                             <div class="history-title text-body">@attempt.QuizTitle</div>
                             <div class="text-small">@attempt.SubmittedAt.ToString("MMM d, yyyy")</div>
@@ -110,7 +110,7 @@
     private List<QuizHistoryItem> QuizHistory = new();
     private List<AttendanceHistoryItem> AttendanceHistory = new();
 
-    private record QuizHistoryItem(string QuizTitle, int Score, DateTime SubmittedAt);
+    private record QuizHistoryItem(string QuizTitle, int Score, bool Passed, DateTime SubmittedAt);
     private record AttendanceHistoryItem(string Topic, DateTime CheckedInAt);
 
     protected override async Task OnInitializedAsync()
@@ -150,7 +150,7 @@
         CurrentStreak = AchievementService.ComputeStreaks(activityDates).current;
 
         QuizHistory = attempts
-            .Select(a => new QuizHistoryItem(a.Quiz?.Title ?? "Quiz", (int)Math.Round(scoreByQuiz.GetValueOrDefault(a.QuizId)), a.SubmittedAt.DateTime))
+            .Select(a => new QuizHistoryItem(a.Quiz?.Title ?? "Quiz", (int)Math.Round(scoreByQuiz.GetValueOrDefault(a.QuizId)), a.Passed, a.SubmittedAt.DateTime))
             .ToList();
 
         AttendanceHistory = attendances

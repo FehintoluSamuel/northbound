@@ -446,6 +446,9 @@ namespace NorthboundSessions.Web.Migrations
                     b.Property<string>("SlideFilePath")
                         .HasColumnType("text");
 
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -463,8 +466,14 @@ namespace NorthboundSessions.Web.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("FurthestSlideIndex")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("LessonId")
                         .HasColumnType("integer");
@@ -519,6 +528,9 @@ namespace NorthboundSessions.Web.Migrations
                     b.Property<int>("LessonId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("PassingScorePercent")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -537,6 +549,9 @@ namespace NorthboundSessions.Web.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Passed")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("QuizId")
                         .HasColumnType("integer");

@@ -12,6 +12,7 @@ namespace NorthboundSessions.Data
         public Quiz? Quiz {get; set;}
         public required string StudentId {get; set;}
         public int Score {get; set;}
+        public bool Passed {get; set;}
         public DateTimeOffset SubmittedAt {get; set;} = DateTimeOffset.UtcNow;
     }
 

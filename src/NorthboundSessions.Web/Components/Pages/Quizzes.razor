@@ -8,8 +8,8 @@
 @using NorthboundSessions.Data
 @using NorthboundSessions.Web.Services
 @using NorthboundSessions.Web.Data
+@inject LessonAccessService Access
 @attribute [Authorize]
-
 
 <div class="container">
     <div class="page-header"><h1>All Quizzes</h1></div>
@@ -22,10 +22,10 @@
                 @foreach (var item in Taken)
                 {
                     <a class="list-item" href="@($"/quizzes/{item.Id}/take")">
-                        <span class="score-chip @(item.Score >= 70 ? "pass" : "fail")">@item.Score%</span>
+                        <span class="score-chip @(item.Score >= item.PassingScorePercent ? "pass" : "fail")">@item.Score%</span>
                         <span class="list-body">
                             <span class="list-title text-body">@item.Title</span>
-                            <span class="text-small">@item.LessonTitle</span>
+                            <span class="text-small">@item.LessonTitle · retake available</span>
                         </span>
                     </a>
                 }
@@ -57,13 +57,35 @@
             </div>
         }
     </section>
+
+    @if (Locked.Count > 0)
+    {
+        <section class="section">
+            <div class="section-head"><h2>Locked</h2></div>
+            <div class="list">
+                @foreach (var item in Locked)
+                {
+                    <div class="list-item">
+                        <span class="status-icon pending" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                        </span>
+                        <span class="list-body">
+                            <span class="list-title text-body">@item.Title</span>
+                            <span class="text-small">@item.LessonTitle · @item.LockReason</span>
+                        </span>
+                    </div>
+                }
+            </div>
+        </section>
+    }
 </div>
 
 @code {
-    private record QuizRow(int Id, string Title, string LessonTitle, int Score);
+    private record QuizRow(int Id, string Title, string LessonTitle, int Score, int PassingScorePercent, string? LockReason);
 
     private List<QuizRow> Taken = new();
     private List<QuizRow> Available = new();
+    private List<QuizRow> Locked = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -72,7 +94,6 @@
 
         await using var db = await DbFactory.CreateDbContextAsync();
 
-        // Only quizzes belonging to already-released lessons are shown at all.
         var quizzes = await db.Quizzes
             .Include(q => q.Lesson)
             .Where(q => q.Lesson != null && q.Lesson.ReleaseDate <= DateOnly.FromDateTime(DateTime.UtcNow))
@@ -101,17 +122,27 @@
                         : 0;
                 });
 
+        var states = await Access.GetLessonStatesAsync(studentId);
+        var stateByLessonId = states.ToDictionary(s => s.LessonId);
+
         foreach (var quiz in quizzes)
         {
             var lessonTitle = quiz.Lesson?.Title ?? "Lesson";
+            var state = stateByLessonId.GetValueOrDefault(quiz.LessonId);
+            var passingScore = quiz.PassingScorePercent;
+            var row = new QuizRow(quiz.Id, quiz.Title, lessonTitle, 0, passingScore, state?.LockReason);
 
             if (attempts.TryGetValue(quiz.Id, out var score))
             {
-                Taken.Add(new QuizRow(quiz.Id, quiz.Title, lessonTitle, score));
+                Taken.Add(row with { Score = score });
+            }
+            else if (state?.IsUnlocked == true && state.IsCompleted)
+            {
+                Available.Add(row);
             }
             else
             {
-                Available.Add(new QuizRow(quiz.Id, quiz.Title, lessonTitle, 0));
+                Locked.Add(row);
             }
         }
     }

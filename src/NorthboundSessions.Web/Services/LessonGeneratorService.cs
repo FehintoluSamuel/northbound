@@ -36,6 +36,7 @@ namespace NorthboundSessions.Web.Services
 
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
                 var isLiveDay = DateTime.UtcNow.DayOfWeek == DayOfWeek.Tuesday || DateTime.UtcNow.DayOfWeek == DayOfWeek.Thursday;
+                var nextSortOrder = (await context.Lessons.MaxAsync(l => (int?)l.SortOrder) ?? 0) + 1;
                 var lesson = new Lesson
                 {
                     Title = nextTopic.Title,
@@ -43,6 +44,7 @@ namespace NorthboundSessions.Web.Services
                     MarketSymbol = nextTopic.MarketSymbol,
                     ImageBytes = nextTopic.ImageBytes,
                     ReleaseDate = today,
+                    SortOrder = nextSortOrder,
                     IsLiveDay = isLiveDay
                 };
                 context.Lessons.Add(lesson);

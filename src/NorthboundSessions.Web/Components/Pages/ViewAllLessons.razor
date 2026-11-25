@@ -8,12 +8,8 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @using NorthboundSessions.Web.Data
 @using NorthboundSessions.Web.Services
-@inject StudentStatsService Stats
+@inject LessonAccessService Access
 @attribute [Authorize]
-
-
-
-
 
 <div class="container">
     <div class="page-header"><h1>Lessons</h1></div>
@@ -31,7 +27,7 @@
                         </span>
                         <span class="list-body">
                             <span class="list-title text-body">@item.Title</span>
-                            <span class="text-small">Released @item.ReleaseDate.ToString("MMM d")</span>
+                            <span class="text-small">Released @item.ReleaseDate.ToString("MMM d") · quiz passed</span>
                         </span>
                     </a>
                 }
@@ -63,36 +59,59 @@
             </div>
         }
     </section>
+
+    @if (Locked.Count > 0)
+    {
+        <section class="section">
+            <div class="section-head"><h2>Locked</h2></div>
+            <div class="list">
+                @foreach (var item in Locked)
+                {
+                    <div class="list-item">
+                        <span class="status-icon pending" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                        </span>
+                        <span class="list-body">
+                            <span class="list-title text-body">@item.Title</span>
+                            <span class="text-small">@item.LockReason</span>
+                        </span>
+                    </div>
+                }
+            </div>
+        </section>
+    }
 </div>
 
 @code {
-    private record LessonRow(int Id, string Title, DateOnly ReleaseDate, bool IsLiveDay);
+    private record LessonRow(int Id, string Title, DateOnly ReleaseDate, bool IsLiveDay, string? LockReason);
 
     private List<LessonRow> Completed = new();
     private List<LessonRow> Available = new();
+    private List<LessonRow> Locked = new();
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
-        await using var db = await DbFactory.CreateDbContextAsync();
+        var states = await Access.GetLessonStatesAsync(studentId);
 
-        var releasedLessons = await db.Lessons
-            .Where(l => l.ReleaseDate <= DateOnly.FromDateTime(DateTime.UtcNow))
-            .OrderByDescending(l => l.ReleaseDate)
-            .ToListAsync();
-
-        var completedLessonIds = string.IsNullOrEmpty(studentId)
-            ? new HashSet<int>()
-            : await Stats.GetCompletedLessonIdsAsync(studentId);
-
-        foreach (var lesson in releasedLessons)
+        foreach (var state in states)
         {
-            var row = new LessonRow(lesson.Id, lesson.Title, lesson.ReleaseDate, lesson.IsLiveDay);
+            var row = new LessonRow(state.LessonId, state.Title, state.ReleaseDate, state.IsLiveDay, state.LockReason);
 
-            if (completedLessonIds.Contains(lesson.Id)) Completed.Add(row);
-            else Available.Add(row);
+            if (state.IsComplete)
+            {
+                Completed.Add(row);
+            }
+            else if (state.IsUnlocked)
+            {
+                Available.Add(row);
+            }
+            else
+            {
+                Locked.Add(row);
+            }
         }
     }
 }

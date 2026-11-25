@@ -7,29 +7,23 @@
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @inject QuizService QuizService
-@inject StudentStatsService Stats
+@inject LessonAccessService AccessService
 @inject NavigationManager Nav
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Web.Data
 @attribute [Authorize]
 
-
-
 @if (QuizNotFound)
 {
     <div class="container"><p class="text-body">This quiz doesn't exist.</p></div>
 }
-else if (AlreadyAttempted)
+else if (QuizLocked)
 {
-    <!-- No retakes allowed — this replaces the question flow entirely -->
     <div class="container">
         <div class="warning-card">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--live)" stroke-width="2">
-                <circle cx="12" cy="12" r="9" /><path d="M12 8v5" /><circle cx="12" cy="16" r=".5" fill="var(--live)" />
-            </svg>
-            <h2>You've already taken this quiz</h2>
-            <p class="text-small">Each quiz can only be attempted once. You scored @PastAttemptScore% on @PastAttemptDate?.ToString("MMM d, yyyy").</p>
-            <button class="btn-primary" @onclick="BackToLesson">Back to lesson</button>
+            <h2>This quiz is locked</h2>
+            <p class="text-small">@LockReason</p>
+            <button class="btn-primary" @onclick="BackToLessons">Back to lessons</button>
         </div>
     </div>
 }
@@ -43,6 +37,16 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
     </div>
 
     <div class="container">
+        @if (PreviousAttemptCount > 0)
+        {
+            <div class="quiz-header">
+                <div class="eyebrow">@CurrentQuiz.Title</div>
+                <p class="text-small">
+                    Last attempt: @PreviousAttemptScore% — @(PreviousAttemptPassed ? "passed" : "not passed yet").
+                    Pass mark is @CurrentQuiz.PassingScorePercent%. Retakes are allowed.
+                </p>
+            </div>
+        }
 
         @if (Stage == QuizStage.Question)
         {
@@ -59,9 +63,6 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
 
             <div class="question-text" id="@($"q-{q.Id}-text")">@q.QuestionText</div>
 
-            @* Was a <div class="option-card" @onclick>, which made it impossible
-               to answer a quiz with a keyboard. Now a real radiogroup: arrow keys
-               move between options, Space/Enter selects. *@
             <div class="option-list" role="radiogroup" aria-labelledby="@($"q-{q.Id}-text")"
                  @onkeydown="e => HandleOptionKey(e, q)">
                 @foreach (var opt in q.Options)
@@ -116,9 +117,6 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
                         {
                             <span class="review-a unanswered">Not answered</span>
                         }
-                        @* A <button>, not an <a> — it performs an action in-page
-                           rather than navigating, and an <a> without href is not
-                           focusable or keyboard-activatable. *@
                         <button type="button" class="edit-link" @onclick="() => JumpToQuestion(idx)">
                             @(answered ? "Edit" : "Answer")
                         </button>
@@ -150,8 +148,9 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
                     </svg>
                     <div class="score-num">@FinalScore%</div>
                 </div>
-                <h2>@(FinalScore >= 70 ? "Nice work" : "Keep practicing")</h2>
-                <p class="text-small">You got @CorrectCount of @Questions.Count questions correct</p>
+                <h2>@(LastAttemptPassed ? "Passed — nice work" : "Keep practicing")</h2>
+                <p class="text-small">You got @CorrectCount of @Questions.Count questions correct. Pass mark: @CurrentQuiz.PassingScorePercent%.</p>
+                <p class="text-small">@(LastAttemptPassed ? "The next lesson is now unlocked." : "Retake this quiz whenever you're ready.")</p>
             </div>
 
             @foreach (var q in Questions)
@@ -181,7 +180,8 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
             }
 
             <div class="nav-row">
-                <button class="btn-primary full" @onclick="BackToLesson">Back to lesson</button>
+                <button class="btn-outline" @onclick="RetakeQuiz">Retake quiz</button>
+                <button class="btn-primary" @onclick="BackToLesson">Back to lesson</button>
             </div>
         }
     </div>
@@ -194,15 +194,18 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
 
     private Quiz? CurrentQuiz;
     private List<QuizQuestion> Questions = new();
-    private Dictionary<int, int> SelectedOptions = new(); // QuestionId -> QuestionOptionId
+    private Dictionary<int, int> SelectedOptions = new();
     private QuizStage Stage = QuizStage.Question;
     private int CurrentQuestionIndex;
     private bool QuizNotFound;
-    private bool AlreadyAttempted;
-    private int PastAttemptScore;
-    private DateTime? PastAttemptDate;
+    private bool QuizLocked;
+    private string LockReason = string.Empty;
+    private int PreviousAttemptCount;
+    private int PreviousAttemptScore;
+    private bool PreviousAttemptPassed;
     private int FinalScore;
     private int CorrectCount;
+    private bool LastAttemptPassed;
     private string SubmitError = string.Empty;
     private string _studentId = string.Empty;
 
@@ -215,27 +218,6 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         _studentId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
-        await using var db = await DbFactory.CreateDbContextAsync();
-
-        // No retakes allowed — check for an existing attempt first,
-        // before loading question content at all.
-        if (!string.IsNullOrEmpty(_studentId))
-        {
-            var existing = await db.QuizAttempts
-                .Where(a => a.QuizId == QuizId && a.StudentId == _studentId)
-                .FirstOrDefaultAsync();
-
-            if (existing is not null)
-            {
-                AlreadyAttempted = true;
-                PastAttemptScore = (int)Math.Round(
-                    (await Stats.GetQuizScorePercentagesAsync(_studentId)).GetValueOrDefault(QuizId));
-                PastAttemptDate = existing.SubmittedAt.DateTime;
-                CurrentQuiz = await db.Quizzes.FindAsync(QuizId); // needed for BackToLesson's LessonId
-                return;
-            }
-        }
-
         var result = await QuizService.GetQuizWithDetailsAsync(QuizId);
         if (result is null)
         {
@@ -245,6 +227,32 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
 
         CurrentQuiz = result;
         Questions = result.Questions.ToList();
+
+        if (!await AccessService.CanTakeQuizAsync(_studentId, QuizId))
+        {
+            QuizLocked = true;
+            LockReason = "Finish this lesson and pass the previous quiz first.";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_studentId))
+        {
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var attempts = await db.QuizAttempts
+            .Where(a => a.QuizId == QuizId && a.StudentId == _studentId)
+            .OrderByDescending(a => a.SubmittedAt)
+            .ToListAsync();
+
+        PreviousAttemptCount = attempts.Count;
+        if (attempts.Count > 0)
+        {
+            var latest = attempts[0];
+            PreviousAttemptScore = (int)Math.Round(latest.Score * 100.0 / Math.Max(1, Questions.Count));
+            PreviousAttemptPassed = latest.Passed || PreviousAttemptScore >= CurrentQuiz.PassingScorePercent;
+        }
     }
 
     private void SelectOption(int questionId, int optionId)
@@ -252,11 +260,6 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
         SelectedOptions[questionId] = optionId;
     }
 
-    /// <summary>
-    /// Arrow keys move the selection within the current question's options, as a
-    /// native radio group does. Without this the roving tabindex below would let a
-    /// keyboard user focus an option but never change it without tabbing back.
-    /// </summary>
     private void HandleOptionKey(KeyboardEventArgs e, QuizQuestion question)
     {
         var step = e.Key switch
@@ -275,7 +278,6 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
             ? options.FindIndex(o => o.Id == selId)
             : -1;
 
-        // With nothing selected, start from the top (down) or the end (up).
         var next = current == -1
             ? (step > 0 ? 0 : options.Count - 1)
             : (current + step + options.Count) % options.Count;
@@ -308,6 +310,10 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
             var attempt = await QuizService.SubmitQuizAsync(QuizId, _studentId, SelectedOptions);
             CorrectCount = attempt.Score;
             FinalScore = (int)Math.Round(CorrectCount * 100.0 / Math.Max(1, Questions.Count));
+            LastAttemptPassed = attempt.Passed;
+            PreviousAttemptCount++;
+            PreviousAttemptScore = FinalScore;
+            PreviousAttemptPassed = LastAttemptPassed;
             SubmitError = string.Empty;
             Stage = QuizStage.Results;
         }
@@ -317,11 +323,24 @@ else if (CurrentQuiz is not null && Questions.Count > 0)
         }
     }
 
+    private void RetakeQuiz()
+    {
+        SelectedOptions.Clear();
+        CurrentQuestionIndex = 0;
+        SubmitError = string.Empty;
+        Stage = QuizStage.Question;
+    }
+
     private void BackToLesson()
     {
         if (CurrentQuiz is not null)
         {
             Nav.NavigateTo($"/lessons/{CurrentQuiz.LessonId}");
         }
+    }
+
+    private void BackToLessons()
+    {
+        Nav.NavigateTo("/view-all-lessons");
     }
 }

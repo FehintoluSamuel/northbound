@@ -15,8 +15,12 @@ namespace NorthboundSessions.Data
         
         public int LessonId { get; set; } 
         
-        public int FurthestSlideIndex { get; set; } 
-        
-        public DateTimeOffset UpdatedAt { get; set; } 
+        public int FurthestSlideIndex { get; set; }
+
+        public bool IsCompleted { get; set; }
+
+        public DateTimeOffset? CompletedAt { get; set; }
+
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 }

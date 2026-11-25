@@ -5,6 +5,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject AchievementService Achievements
 @inject StudentStatsService Stats
+@inject LessonAccessService Access
 @using Microsoft.EntityFrameworkCore
 @using NorthboundSessions.Data
 @using Microsoft.AspNetCore.Authorization
@@ -30,7 +31,7 @@
         }
         else
         {
-            <p>No lesson has been released yet — check back soon.</p>
+            <p>You're all caught up or no lesson has been released yet — check back soon.</p>
         }
     </div>
 </div>
@@ -254,10 +255,11 @@
 
         await using var db = await DbFactory.CreateDbContextAsync();
 
-        NextLesson = await db.Lessons
-            .Where(l => l.ReleaseDate <= DateOnly.FromDateTime(DateTime.UtcNow))
-            .OrderByDescending(l => l.ReleaseDate)
-            .FirstOrDefaultAsync();
+        var nextState = await Access.GetNextLessonAsync(_studentId);
+        if (nextState is not null)
+        {
+            NextLesson = await db.Lessons.FirstOrDefaultAsync(l => l.Id == nextState.LessonId);
+        }
 
         NextSession = await db.LiveSessions
             .Where(s => s.ScheduledAt >= DateTime.UtcNow)

@@ -15,7 +15,10 @@
 
 
 
-<div class="page-title-row"><h1>Create lesson</h1></div>
+<div class="page-title-row">
+    <h1>Create lesson</h1>
+    <a class="btn-outline" href="/dashboard">Dashboard</a>
+</div>
 <div class="page-sub">Lesson content, market chart symbol, and an optional quiz — all created together.</div>
 
 @if (SuccessMessage is not null)
@@ -215,12 +218,14 @@
         {
             await using var db = await DbFactory.CreateDbContextAsync();
 
+            var nextSortOrder = (await db.Lessons.MaxAsync(l => (int?)l.SortOrder) ?? 0) + 1;
             var lesson = new Lesson
             {
                 Title = Title,
                 OutlineContent = OutlineContent,
                 MarketSymbol = normalizedSymbol,
                 ReleaseDate = DateOnly.FromDateTime(ReleaseDateInput),
+                SortOrder = nextSortOrder,
                 IsLiveDay = IsLiveDay,
                 ImageBytes = LessonImageBytes
             };

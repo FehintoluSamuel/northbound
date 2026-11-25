@@ -7,10 +7,12 @@ namespace NorthboundSessions.Web.Services
     public class QuizService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
+        private readonly LessonAccessService _lessonAccess;
 
-        public QuizService(IDbContextFactory<ApplicationDbContext> dbFactory)
+        public QuizService(IDbContextFactory<ApplicationDbContext> dbFactory, LessonAccessService lessonAccess)
         {
             _dbFactory = dbFactory;
+            _lessonAccess = lessonAccess;
         }
 
         public async Task<Quiz?> GetQuizWithDetailsAsync(int quizId)
@@ -29,6 +31,11 @@ namespace NorthboundSessions.Web.Services
                 throw new InvalidOperationException("A signed-in student is required to submit a quiz.");
             }
 
+            if (!await _lessonAccess.CanTakeQuizAsync(studentId, quizId))
+            {
+                throw new InvalidOperationException("Finish this lesson and pass the previous quiz before taking this one.");
+            }
+
             await using var context = await _dbFactory.CreateDbContextAsync();
 
             var quiz = await context.Quizzes
@@ -36,11 +43,6 @@ namespace NorthboundSessions.Web.Services
                 .ThenInclude(q => q.Options)
                 .FirstOrDefaultAsync(q => q.Id == quizId)
                 ?? throw new InvalidOperationException($"Quiz {quizId} does not exist.");
-
-            if (await context.QuizAttempts.AnyAsync(a => a.QuizId == quizId && a.StudentId == studentId))
-            {
-                throw new InvalidOperationException("This quiz has already been attempted.");
-            }
 
             var correctCount = quiz.Questions.Count(question =>
             {
@@ -50,16 +52,50 @@ namespace NorthboundSessions.Web.Services
                     && selected == correct.Id;
             });
 
+            var questionCount = quiz.Questions.Count;
+            var scorePercent = questionCount == 0 ? 0 : correctCount * 100.0 / questionCount;
+            var passed = scorePercent >= quiz.PassingScorePercent;
+            var now = DateTimeOffset.UtcNow;
+
             var attempt = new QuizAttempt
             {
                 QuizId = quizId,
                 StudentId = studentId,
                 Score = correctCount,
-                SubmittedAt = DateTimeOffset.UtcNow
+                Passed = passed,
+                SubmittedAt = now
             };
 
             context.QuizAttempts.Add(attempt);
             await context.SaveChangesAsync();
+
+            if (passed)
+            {
+                var progress = await context.LessonProgresses
+                    .FirstOrDefaultAsync(p => p.StudentId == studentId && p.LessonId == quiz.LessonId);
+
+                if (progress is null)
+                {
+                    context.LessonProgresses.Add(new LessonProgress
+                    {
+                        StudentId = studentId,
+                        LessonId = quiz.LessonId,
+                        FurthestSlideIndex = 0,
+                        IsCompleted = true,
+                        CompletedAt = now,
+                        UpdatedAt = now
+                    });
+                }
+                else if (!progress.IsCompleted)
+                {
+                    progress.IsCompleted = true;
+                    progress.CompletedAt = now;
+                    progress.UpdatedAt = now;
+                }
+
+                await context.SaveChangesAsync();
+            }
+
             return attempt;
         }
     }

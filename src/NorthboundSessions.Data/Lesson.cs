@@ -9,6 +9,7 @@ public class Lesson
     public required string OutlineContent { get; set; }
     public string? MarketSymbol { get; set; }
     public DateOnly ReleaseDate { get; set; }
+    public int SortOrder { get; set; }
     public byte[]? ImageBytes { get; set; }
     public bool IsLiveDay { get; set; }
     public string? SlideFilePath { get; set; }

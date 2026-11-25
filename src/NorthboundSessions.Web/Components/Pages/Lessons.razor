@@ -6,6 +6,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @using NorthboundSessions.Web.Services
 @inject LessonProgressService ProgressService
+@inject LessonAccessService AccessService
 @inject SlideService SlideService
 @inject NavigationManager Nav
 @using NorthboundSessions.Web.Data
@@ -17,6 +18,16 @@
 @if (LessonNotFound)
 {
     <div class="notfound-state"><p>This lesson doesn't exist.</p></div>
+}
+else if (LessonLocked)
+{
+    <div class="container">
+        <div class="warning-card">
+            <h2>This lesson is locked</h2>
+            <p class="text-small">@LessonLockReason</p>
+            <button class="btn-primary" @onclick="BackToLessons">Back to lessons</button>
+        </div>
+    </div>
 }
 else if (CurrentLesson is not null)
 {
@@ -101,7 +112,18 @@ else if (CurrentLesson is not null)
             else if (QuizId is not null)
             {
                 <button class="btn-primary @(!QuizUnlocked ? "locked" : "")" disabled="@(!QuizUnlocked)" @onclick="GoToQuiz">
-                    @(QuizUnlocked ? "Take the quiz" : "Finish reading to unlock quiz")
+                    @if (!QuizUnlocked)
+                    {
+                        <text>Finish reading to unlock quiz</text>
+                    }
+                    else if (Access?.QuizPassed == true)
+                    {
+                        <text>Retake quiz</text>
+                    }
+                    else
+                    {
+                        <text>Take the quiz</text>
+                    }
                 </button>
             }
         </div>
@@ -113,6 +135,10 @@ else if (CurrentLesson is not null)
 
     private Lesson? CurrentLesson;
     private bool LessonNotFound;
+    private bool LessonLocked;
+    private string LessonLockReason = string.Empty;
+    private LessonState? Access;
+    private bool LessonCompleted;
     private List<string> Slides = new();
     private int CurrentSlideIndex;
     private int FurthestSlideReached;
@@ -122,7 +148,7 @@ else if (CurrentLesson is not null)
     private bool _chartRendered;
     private bool IsDark;
 
-    private bool QuizUnlocked => FurthestSlideReached >= Slides.Count - 1;
+    private bool QuizUnlocked => LessonCompleted;
 
     protected override async Task OnInitializedAsync()
     {
@@ -137,6 +163,16 @@ else if (CurrentLesson is not null)
             LessonNotFound = true;
             return;
         }
+
+        Access = await AccessService.GetLessonStateAsync(_studentId, LessonId);
+        if (Access is not null && !Access.IsUnlocked)
+        {
+            LessonLocked = true;
+            LessonLockReason = Access.LockReason ?? "Finish the previous lesson first.";
+            return;
+        }
+
+        LessonCompleted = Access?.IsCompleted ?? false;
 
         Slides = SlideService.GenerateSlides(CurrentLesson).Select(s => s.BodyText).ToList();
         if (Slides.Count == 0) Slides.Add(CurrentLesson.OutlineContent ?? string.Empty);
@@ -219,7 +255,11 @@ else if (CurrentLesson is not null)
                 FurthestSlideReached = CurrentSlideIndex;
                 if (!string.IsNullOrEmpty(_studentId))
                 {
-                    await ProgressService.RecordProgressAsync(_studentId, LessonId, FurthestSlideReached);
+                    await ProgressService.RecordProgressAsync(_studentId, LessonId, FurthestSlideReached, Slides.Count - 1);
+                    if (CurrentSlideIndex >= Slides.Count - 1)
+                    {
+                        LessonCompleted = true;
+                    }
                 }
             }
         }

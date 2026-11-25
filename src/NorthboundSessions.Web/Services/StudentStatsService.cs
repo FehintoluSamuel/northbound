@@ -52,16 +52,53 @@ public class StudentStatsService(IDbContextFactory<ApplicationDbContext> dbFacto
     private static async Task<HashSet<int>> CompletedLessonIdsAsync(
         ApplicationDbContext context, string studentId, DateOnly today)
     {
-        var ids = await context.QuizAttempts
-            .Where(a => a.StudentId == studentId
-                && a.Quiz != null
-                && a.Quiz.Lesson != null
-                && a.Quiz.Lesson.ReleaseDate <= today)
-            .Select(a => a.Quiz!.LessonId)
-            .Distinct()
+        var releasedLessonIds = await context.Lessons
+            .AsNoTracking()
+            .Where(l => l.ReleaseDate <= today)
+            .Select(l => l.Id)
+            .ToHashSetAsync();
+
+        var progressLessonIds = await context.LessonProgresses
+            .AsNoTracking()
+            .Where(p => p.StudentId == studentId && p.IsCompleted)
+            .Select(p => p.LessonId)
             .ToListAsync();
 
-        return ids.ToHashSet();
+        var attempts = await context.QuizAttempts
+            .AsNoTracking()
+            .Where(a => a.StudentId == studentId)
+            .Select(a => new
+            {
+                a.QuizId,
+                a.Score,
+                a.Passed,
+                LessonId = a.Quiz!.LessonId,
+                a.Quiz!.PassingScorePercent
+            })
+            .ToListAsync();
+
+        var quizIds = attempts.Select(a => a.QuizId).Distinct().ToList();
+        var questionCounts = quizIds.Count == 0
+            ? new Dictionary<int, int>()
+            : await context.QuizQuestions
+                .AsNoTracking()
+                .Where(q => quizIds.Contains(q.QuizId))
+                .GroupBy(q => q.QuizId)
+                .Select(g => new { QuizId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.QuizId, x => x.Count);
+
+        var passedLessonIds = attempts
+            .Where(a => a.Passed
+                || (questionCounts.TryGetValue(a.QuizId, out var total)
+                    && total > 0
+                    && a.Score * 100.0 / total >= a.PassingScorePercent))
+            .Select(a => a.LessonId)
+            .ToHashSet();
+
+        return progressLessonIds
+            .Concat(passedLessonIds)
+            .Where(releasedLessonIds.Contains)
+            .ToHashSet();
     }
 
     private static async Task<Dictionary<int, double>> ScorePercentagesAsync(
