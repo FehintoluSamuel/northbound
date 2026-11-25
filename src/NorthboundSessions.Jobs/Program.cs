@@ -54,6 +54,8 @@ static string NormalizeJobConnectionString(string value)
     if ((connectionBuilder.Host ?? string.Empty).EndsWith(".render.com", StringComparison.OrdinalIgnoreCase))
     {
         connectionBuilder.SslMode = SslMode.Require;
+        connectionBuilder.GssEncryptionMode = GssEncryptionMode.Disable;
+        connectionBuilder.ChannelBinding = ChannelBinding.Disable;
         connectionBuilder.Pooling = false;
     }
 
