@@ -18,7 +18,8 @@ jobs:
 
       - name: Run lesson generator
         env:
+          DATABASE_URL: ${{ secrets.DB_CONNECTION_STRING }}
           ConnectionStrings__DefaultConnection: ${{ secrets.DB_CONNECTION_STRING }}
-          Email__Address: ${{ secrets.EMAIL_ADDRESS }} 
+          Email__Address: ${{ secrets.EMAIL_ADDRESS }}
           Email__AppPassword: ${{ secrets.EMAIL_APP_PASSWORD }}
         run: dotnet run --project src/NorthboundSessions.Jobs

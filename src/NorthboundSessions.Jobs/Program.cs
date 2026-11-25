@@ -4,15 +4,20 @@ using Microsoft.Extensions.Hosting;
 using NorthboundSessions.Web.Data; 
 using NorthboundSessions.Web.Services; 
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 
 NeonEnvironment.LoadDotEnv();
 
 var builder = Host.CreateApplicationBuilder(args); 
-var connectionString = NeonEnvironment.GetNpgsql("DATABASE_URL")
+var configuredConnectionString = NeonEnvironment.GetNpgsql("DATABASE_URL", pooled: false)
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string not found.");
+var connectionString = NormalizeJobConnectionString(configuredConnectionString);
 
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())); 
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure(
+    maxRetryCount: 3,
+    maxRetryDelay: TimeSpan.FromSeconds(5),
+    errorCodesToAdd: null)));
 builder.Services.AddScoped<LessonGeneratorService>(); 
 builder.Services.AddScoped<LessonBankSeeder>();
 builder.Services.AddScoped<EmailService>(); 
@@ -41,3 +46,16 @@ else {
             ( subject: $"New lesson available: {lesson.Title}", body: $"A new lesson is ready: {lesson.Title}. Log in to view it." 
             );
       }
+
+static string NormalizeJobConnectionString(string value)
+{
+    var connectionBuilder = new NpgsqlConnectionStringBuilder(value);
+
+    if ((connectionBuilder.Host ?? string.Empty).EndsWith(".render.com", StringComparison.OrdinalIgnoreCase))
+    {
+        connectionBuilder.SslMode = SslMode.Require;
+        connectionBuilder.Pooling = false;
+    }
+
+    return connectionBuilder.ConnectionString;
+}
